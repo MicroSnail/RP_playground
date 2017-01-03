@@ -1,55 +1,26 @@
-////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya TOP module. It connects external pins and PS part with
-// other application modules.
-// Authors: Matej Oblak, Iztok Jeras
-// (c) Red Pitaya  http://www.redpitaya.com
-////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 01/03/2017 03:30:39 PM
+// Design Name: 
+// Module Name: playground_top
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
-/**
- * GENERAL DESCRIPTION:
- *
- * Top module connects PS part with rest of Red Pitaya applications.  
- *
- *                   /-------\      
- *   PS DDR <------> |  PS   |      AXI <-> custom bus
- *   PS MIO <------> |   /   | <------------+
- *   PS CLK -------> |  ARM  |              |
- *                   \-------/              |
- *                                          |
- *                            /-------\     |
- *                         -> | SCOPE | <---+
- *                         |  \-------/     |
- *                         |                |
- *            /--------\   |   /-----\      |
- *   ADC ---> |        | --+-> |     |      |
- *            | ANALOG |       | PID | <----+
- *   DAC <--- |        | <---- |     |      |
- *            \--------/   ^   \-----/      |
- *                         |                |
- *                         |  /-------\     |
- *                         -- |  ASG  | <---+ 
- *                            \-------/     |
- *                                          |
- *             /--------\                   |
- *    RX ----> |        |                   |
- *   SATA      | DAISY  | <-----------------+
- *    TX <---- |        | 
- *             \--------/ 
- *               |    |
- *               |    |
- *               (FREE)
- *
- * Inside analog module, ADC data is translated from unsigned neg-slope into
- * two's complement. Similar is done on DAC data.
- *
- * Scope module stores data from ADC into RAM, arbitrary signal generator (ASG)
- * sends data from RAM to DAC. MIMO PID uses ADC ADC as input and DAC as its output.
- *
- * Daisy chain connects with other boards with fast serial link. Data which is
- * send and received is at the moment undefined. This is left for the user.
- */
 
-module red_pitaya_top #(
+module playground_top#(
   // identification
   bit [0:5*32-1] GITH = '0,
   // module numbers
