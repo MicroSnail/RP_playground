@@ -1,3 +1,12 @@
+# Only not ignore srcs
+RP_playground.cache
+RP_playground.hw
+RP_playground.ip_user_files
+RP_playground.runs
+RP_playground.sim
+RP_playground.sdk
+
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
