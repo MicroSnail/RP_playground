@@ -81,8 +81,6 @@ module playground_top#(
   inout  logic [ 8-1:0] led_o
 );
 
-// diferential clock input
-IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
 
 
 zynq_block_wrapper zynqchip(
@@ -109,8 +107,44 @@ zynq_block_wrapper zynqchip(
     .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb)
   );
 
+// diferential clock input
+IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in)); 
 
 
-assign led_o = exp_p_io[6] ? {8'b00110011} : {8'b11001100} ;
+
+//clocks
+wire clk_50;
+wire clk_25;
+wire clk_200;
+ 
+
+clk_wiz_0 inst
+  (
+  // Clock out ports  
+  .clk_50(clk_50),
+  .clk_25(clk_25),
+  .clk_200(clk_200),
+ // Clock in ports
+  .clk_in1(adc_clk_in)
+  );
+
+assign led_o[0] = exp_p_io[6] ? 1'b1 : 1'b0;
+
+assign led_o[7:1] = exp_n_io[6] ? counter7 : {7{led_blink}};
+
+reg [31 : 0] blinkCounter = 0;
+reg led_blink = 0;
+reg [6:0] counter7 = 0;
+
+always @(posedge clk_25) begin
+	if (blinkCounter == 25000000-1) begin
+		blinkCounter <= 0;
+		led_blink <= ~led_blink;
+		counter7 <= counter7+1;
+	end else begin
+		blinkCounter <= blinkCounter + 1;
+	end
+	
+end
 
 endmodule
