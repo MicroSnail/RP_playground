@@ -779,6 +779,7 @@ CONFIG.PCW_USB_RESET_ENABLE {0} \
 CONFIG.PCW_USB_RESET_POLARITY {Active Low} \
 CONFIG.PCW_USB_RESET_SELECT {<Select>} \
 CONFIG.PCW_USE_CROSS_TRIGGER {0} \
+CONFIG.PCW_USE_M_AXI_GP1 {0} \
 CONFIG.PCW_WDT_PERIPHERAL_CLKSRC {CPU_1X} \
 CONFIG.PCW_WDT_PERIPHERAL_DIVISOR0 {1} \
 CONFIG.PCW_WDT_PERIPHERAL_ENABLE {0} \
@@ -1426,13 +1427,13 @@ CONFIG.PCW_WDT_WDT_IO.VALUE_SRC {DEFAULT} \
   regenerate_bd_layout -layout_string {
    guistr: "# # String gsaved with Nlview 6.6.5b  2016-09-06 bk=1.3687 VDI=39 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
-preplace port DDR -pg 1 -y -210 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -y -190 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 1 -y -170 -defaultsOSRD
+preplace port DDR -pg 1 -y 40 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 60 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 1 -y 80 -defaultsOSRD
 preplace netloc processing_system7_0_DDR 1 1 1 NJ
 preplace netloc processing_system7_0_FIXED_IO 1 1 1 NJ
-preplace netloc processing_system7_0_FCLK_CLK0 1 0 2 10 -80 370
-levelinfo -pg 1 -10 190 390 -top -250 -bot 170
+preplace netloc processing_system7_0_FCLK_CLK0 1 0 2 10 -10 630
+levelinfo -pg 1 -10 450 660 -top -260 -bot 710
 ",
 }
 

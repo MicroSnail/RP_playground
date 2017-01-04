@@ -1,7 +1,7 @@
 -- Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2016.4 (win64) Build 1733598 Wed Dec 14 22:35:39 MST 2016
--- Date        : Tue Jan 03 16:00:09 2017
+-- Date        : Tue Jan 03 22:48:38 2017
 -- Host        : EpsilonIJK running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               d:/Users/MicroSnail/Documents/Cornell/Vengalattore/FPGA_PID/RP_playground/RP_playground.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.vhdl
@@ -18,7 +18,7 @@ entity clk_wiz_0_clk_wiz_0_clk_wiz is
   port (
     clk_50 : out STD_LOGIC;
     clk_25 : out STD_LOGIC;
-    clk_200 : out STD_LOGIC;
+    clk_125 : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
@@ -26,7 +26,7 @@ entity clk_wiz_0_clk_wiz_0_clk_wiz is
 end clk_wiz_0_clk_wiz_0_clk_wiz;
 
 architecture STRUCTURE of clk_wiz_0_clk_wiz_0_clk_wiz is
-  signal clk_200_clk_wiz_0 : STD_LOGIC;
+  signal clk_125_clk_wiz_0 : STD_LOGIC;
   signal clk_25_clk_wiz_0 : STD_LOGIC;
   signal clk_50_clk_wiz_0 : STD_LOGIC;
   signal clk_in1_clk_wiz_0 : STD_LOGIC;
@@ -77,8 +77,8 @@ clkout2_buf: unisim.vcomponents.BUFG
     );
 clkout3_buf: unisim.vcomponents.BUFG
      port map (
-      I => clk_200_clk_wiz_0,
-      O => clk_200
+      I => clk_125_clk_wiz_0,
+      O => clk_125
     );
 plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
     generic map(
@@ -93,7 +93,7 @@ plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
       CLKOUT1_DIVIDE => 40,
       CLKOUT1_DUTY_CYCLE => 0.500000,
       CLKOUT1_PHASE => 0.000000,
-      CLKOUT2_DIVIDE => 5,
+      CLKOUT2_DIVIDE => 8,
       CLKOUT2_DUTY_CYCLE => 0.500000,
       CLKOUT2_PHASE => 0.000000,
       CLKOUT3_DIVIDE => 1,
@@ -122,7 +122,7 @@ plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
       CLKINSEL => '1',
       CLKOUT0 => clk_50_clk_wiz_0,
       CLKOUT1 => clk_25_clk_wiz_0,
-      CLKOUT2 => clk_200_clk_wiz_0,
+      CLKOUT2 => clk_125_clk_wiz_0,
       CLKOUT3 => NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED,
       CLKOUT4 => NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED,
       CLKOUT5 => NLW_plle2_adv_inst_CLKOUT5_UNCONNECTED,
@@ -146,7 +146,7 @@ entity clk_wiz_0 is
   port (
     clk_50 : out STD_LOGIC;
     clk_25 : out STD_LOGIC;
-    clk_200 : out STD_LOGIC;
+    clk_125 : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
   attribute NotValidForBitStream : boolean;
@@ -157,7 +157,7 @@ architecture STRUCTURE of clk_wiz_0 is
 begin
 inst: entity work.clk_wiz_0_clk_wiz_0_clk_wiz
      port map (
-      clk_200 => clk_200,
+      clk_125 => clk_125,
       clk_25 => clk_25,
       clk_50 => clk_50,
       clk_in1 => clk_in1
