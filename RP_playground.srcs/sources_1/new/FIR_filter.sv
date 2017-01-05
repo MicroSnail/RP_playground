@@ -25,22 +25,13 @@ module FIR_filter
       parameter DW = 16,            //data width
       parameter out_DW = 2*DW,      //output width
       parameter nDatMAC= 32,        //number of data each MAC handle
-      parameter nMAC = 50           //number of MACs
+      parameter nMAC = 16           //number of MACs
   )
   (
     input       [DW - 1 : 0]                datIn,
     output reg  [out_DW - 1 : 0]            datOut,
     input                                   clk,
-    input                                   rst,
-    // System bus
-    input      [ 32-1:0] sys_addr   ,  // bus address
-    input      [ 32-1:0] sys_wdata  ,  // bus write data
-    input      [  4-1:0] sys_sel    ,  // bus write byte select
-    input                sys_wen    ,  // bus write enable
-    input                sys_ren    ,  // bus read enable
-    output reg [ 32-1:0] sys_rdata  ,  // bus read data
-    output reg           sys_err    ,  // bus error indicator
-    output reg           sys_ack       // bus acknowledge signal    
+    input                                   rst
   );
 
     // total number of sample/ size of the sample array is
@@ -131,41 +122,5 @@ module FIR_filter
          .sum_finished(sum_finished)
       );
 //------MAC sum end------------------------------------//
-
-
-
-
-
-// System bus connection
-int i;
-
-always @(posedge clk)
-if (rst == 1'b0) begin
-  flatCoeff <= {(totalNBits * - 1) {1'b0}};
-end else if (sys_wen) begin
-  for (i=0; i < totalNSamples; i = i+1) begin
-    if (sys_addr[19:0]== (20'h0 + i * 4))   flatCoeff[i * DW +: DW] <= sys_wdata[ DW-1 : 0];
-  end
-end
-
-wire sys_en;
-assign sys_en = sys_wen | sys_ren;
-
-int j;
-always @(posedge clk)
-if (rst == 1'b0) begin
-  sys_err <= 1'b0;
-  sys_ack <= 1'b0;
-end else begin
-  sys_err <= 1'b0;
-
-  for (j=0; j < totalNSamples; j = j+1) begin
-    if (sys_addr[19:0]== (20'h0 + j * 4)) begin
-      sys_ack   <= sys_en;
-      sys_rdata <= { {(32-DW){1'b0}}, flatCoeff[j * DW +: DW]};
-    end
-  end
-end
-
 
 endmodule

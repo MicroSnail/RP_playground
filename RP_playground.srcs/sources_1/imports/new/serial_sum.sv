@@ -22,7 +22,7 @@
 
 module serial_sum
 #(
-parameter nMAC = 50,
+parameter nMAC = 64,
 parameter datBW = 16,
 parameter outBW = 32
 )

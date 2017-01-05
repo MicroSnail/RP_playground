@@ -20,7 +20,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module CPUwriteTest(
+module CPUwriteTest#(
+  parameter AW = 15,    //address width
+  parameter BW = 20     //data bitwidth
+  )(
    // ADC
    input                 clk_i           ,  // clock
    // system bus
@@ -41,15 +44,26 @@ module CPUwriteTest(
 reg [7:0] testArray = 8'b10011011;
 assign testArrayOut = testArray;
 // wire [20-1:0] coefficient;
-wire  [20-1:0] coeff_readout;
+wire  [3:0][BW-1:0] coeff_readout;
 
-reg [15-1:0] addrRequest;
+reg [AW-1:0] addrRequest;
 
-coeff_table memory (
-  .clk(clk_i),
-  .en(1),
-  .addr(addrRequest),
-  .data(coeff_readout)
+// coeff_table memory (
+//   .clk(clk_i),
+//   .en(1),
+//   .addr(addrRequest),
+//   .data(coeff_readout)
+// );
+
+
+coeff_table coeff_table_inst (
+    .clk    (  clk_i  ),
+    .en     (  1  ),
+    .addr   ( addrRequest  ),     // Supply 8-bit address
+    .data_01 ( coeff_readout[00] ),
+    .data_02 ( coeff_readout[01] ),
+    .data_03 ( coeff_readout[02] ),
+    .data_04 ( coeff_readout[03] )     // Supply 64-bit bus
 );
 
 
@@ -71,8 +85,11 @@ always @(posedge clk_i) begin
    casez (sys_addr[19:0])
      20'h2ffc 	:	begin sys_ack <= sys_en;         sys_rdata <= {{32-8{1'b0}}, testArray}          ; end
      20'h0000   : begin sys_ack <= sys_en;         sys_rdata <= {{32-14{1'b0}}, adc_raw_in}          ; end
-     20'h0004   : begin sys_ack <= sys_en;         sys_rdata <= {{32-20{1'b0}}, coeff_readout}          ; end
-     20'h000c   : begin sys_ack <= sys_en;         sys_rdata <= {{32-6{1'b0}}, addrRequest}          ; end 
+     20'h0004   : begin sys_ack <= sys_en;         sys_rdata <= {{32-BW{1'b0}}, coeff_readout}          ; end
+     20'h0008   : begin sys_ack <= sys_en;         sys_rdata <= {{32-BW{1'b0}}, coeff_readout}          ; end
+     20'h000c   : begin sys_ack <= sys_en;         sys_rdata <= {{32-BW{1'b0}}, coeff_readout}          ; end
+     20'h0010   : begin sys_ack <= sys_en;         sys_rdata <= {{32-BW{1'b0}}, coeff_readout}          ; end
+     20'h0100   : begin sys_ack <= sys_en;         sys_rdata <= {{32-AW{1'b0}}, addrRequest}          ; end 
        default 	: begin sys_ack <= sys_en;         sys_rdata <=   32'h0                           ; end
    endcase
 end
