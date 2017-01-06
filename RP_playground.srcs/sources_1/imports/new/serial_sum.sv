@@ -22,57 +22,60 @@
 
 module serial_sum
 #(
-parameter nMAC = 64,
-parameter datBW = 16,
-parameter outBW = 32
+parameter NMAC = 4,
+parameter BW = 32,
+parameter OBW = 32
 )
-    (
-      input [outBW * nMAC - 1: 0]   mac_output,
-      input                         inputUpdated,
-      input                         clk,
-      input                         rst,
-      output reg [outBW - 1:0]      mac_sum = 0,
-      output                        sum_finished
-    );
+  (
+    // Debug hijacking
+    output reg [$clog2(NMAC)  : 0] n = 0,
+    output reg [OBW - 1:0] new_result  = 0,
+    output reg               execute     = 0,
+
+    input [OBW * NMAC - 1: 0]   mac_output,
+    input                         inputUpdated,
+    input                         clk,
+    input                         rst,
+    output reg [OBW - 1:0]      mac_sum = 0,
+    output                        sum_finished
+  );
     
-    reg [$clog2(nMAC)  : 0] n = 0;
+// use the following reg instead of an output port when finished 
+// debugging
+// reg [$clog2(NMAC)  : 0] n = 0;
+// reg [OBW - 1:0] new_result  = 0;
+// reg               execute     = 0;
+
+
 //    wire execute;
-    assign sum_finished = (n>=nMAC);
+assign sum_finished = (n>=NMAC);
 //    assign execute = ~sum_finished && inputUpdated;
 
-    reg               execute     = 0;
-    reg [outBW - 1:0] new_result  = 0;
-    
-    // Clear things when ever the input is updated (MAC outputs)
-    // And set execute flag to true (1)
-    always @(posedge inputUpdated) begin
-      if(rst) begin
-        execute <= 0;
-      end else begin
+// always @(posedge clk or posedge inputUpdated or posedge sum_finished) begin
+always @(posedge clk) begin
+  if(rst) begin
+    mac_sum     <= 0;
+    n           <= 0;
+    new_result  <= 0;
+    execute     <= 0;
+  end else begin
+
+    if (sum_finished) begin
+      execute <= 0;
+      mac_sum <= new_result;
+      n       <= 0;
+    end else begin
+      if(execute) begin
+        n           <= n + 1;
+        new_result  <= new_result + mac_output[n * OBW +: OBW];        
+      end else if (inputUpdated) begin
         execute     <= 1;
         new_result  <= 0;
         n           <= 0;
       end
     end
-    
-    always @(posedge sum_finished) begin
-      execute <= 0;
-      mac_sum <= new_result;
-    end
-    
-    
-    always @(posedge clk) begin
-      if(rst) begin
-        mac_sum     <= 0;
-        n           <= 0;
-        new_result  <= 0;
-      
-      end else if(execute && ~sum_finished) begin
-        n           <= n + 1;
-        new_result  <= new_result + mac_output[n * outBW +: outBW];
-        
-      end      
-    end
+  end      
+end
     
 
 

@@ -22,51 +22,82 @@
 
 module multiplyAccumulator
 #(
-  parameter nData = 16,
-  parameter datBW = 16,
-  parameter outBW = 2 * datBW
+  parameter ND = 16,        // number of data
+  parameter BW = 32,        // bitwidth of data
+  parameter OBW = BW    // bitwidth of output
 )
-(
-  input   [nData * datBW - 1 : 0]   inA,
-  input   [nData * datBW - 1 : 0]   inB,
+( 
+  input   [ND * BW - 1  : 0]        inA,
+  input   [BW - 1       : 0]        singleInA,
+  input   [ND * BW - 1  : 0]        inB,
+  input   [$clog2(ND) -1: 0]        rd_addr,
+
+  // a flag to know rd_addr looped through a cycle
+  input                             rd_addr_l_MSB, 
+  
   input                             clk,
   input                             rst,
   input                             inputUpdated,
-  output  reg [outBW - 1 : 0]       mac_out = 0,
+  output  reg [OBW - 1 : 0]         mac_out = 0,
   output                            mac_done,
+  output  reg                       execute = 0,
   output  reg                       mac_armed = 1
   
 );
 
-  reg [$clog2(nData) : 0] cursor = 0;
+  // reg [$clog2(ND) : 0] rd_addr = 0;
 //  reg execute = 0;
-  wire execute;
-  assign mac_done = (cursor >= nData) && (~mac_armed);
-  assign execute = (~mac_done) && inputUpdated;
-  
-  always @(posedge clk) begin
-    if (rst) begin
-      cursor  <=  0;
-      mac_out  <=  {(nData * datBW - 1){1'b0}};
-      mac_armed <= 1;
-//      execute <= 0;
-    end else begin
-      if (mac_armed && inputUpdated) begin
-        mac_armed <= 0;
-//        execute   <= 1;
-        cursor    <= 0;
-        mac_out   <= 0;
-      end else if(execute && ~mac_done) begin
-        mac_out <= mac_done ? mac_out : mac_out + inA[cursor * datBW  +: datBW] * inB[cursor * datBW +: datBW];
-        cursor <= cursor + 1;
+// wire execute;
+assign mac_done = rd_addr_l_MSB && (~mac_armed);
+
+
+// assign execute = (~mac_done) && inputUpdated;
+
+wire [BW - 1 : 0] debug_current_elem;
+assign debug_current_elem = elem_buf;
+
+reg [BW-1 : 0] elem_buf=0;
+reg delay_exec = 0;
+
+always @(posedge clk) begin
+  if (rst) begin
+    elem_buf <= 0;
+  end else begin
+    elem_buf <= inB[rd_addr * BW +: BW];
+  end
+end
+
+// only a stub
+
+always @(posedge clk) begin
+  if (rst) begin
+    // rd_addr  <=  0;
+    mac_out  <=  {(ND * BW - 1){1'b0}};
+    mac_armed <= 1;
+    execute <= 0;
+    delay_exec <= 0;
+  end else begin
+    if (mac_armed && inputUpdated) begin
+      execute   <= 1;
+      delay_exec <= 1;
+      mac_armed <= 0;
+      // rd_addr   <= 0;
+      mac_out   <= 0;
+    end else if(execute && ~mac_done) begin
+      if (delay_exec) begin
+        delay_exec <= 0;
+      end else begin
+        mac_out <= mac_out + singleInA * elem_buf;
       end
-      
-      if (mac_done) begin
-        mac_armed <= 1;
-      end
-      
-      
+      // rd_addr <= rd_addr + 1;
+    end
+    
+    if (mac_done) begin
+      mac_armed   <= 1;
+      execute     <= 0;
     end
   end
+end
+
 
 endmodule

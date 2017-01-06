@@ -59,16 +59,16 @@ module playground_top#(
   output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
   output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
   // // DAC
-  output logic [14-1:0] dac_dat_o  ,  // DAC combined data
-  output logic          dac_wrt_o  ,  // DAC write
-  output logic          dac_sel_o  ,  // DAC channel select
-  output logic          dac_clk_o  ,  // DAC clock
-  output logic          dac_rst_o  ,  // DAC reset
+  // output logic [14-1:0] dac_dat_o  ,  // DAC combined data
+  // output logic          dac_wrt_o  ,  // DAC write
+  // output logic          dac_sel_o  ,  // DAC channel select
+  // output logic          dac_clk_o  ,  // DAC clock
+  // output logic          dac_rst_o  ,  // DAC reset
   // // PWM DAC
-  output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
+  // output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
   // // XADC
-  input  logic [ 5-1:0] vinp_i     ,  // voltages p
-  input  logic [ 5-1:0] vinn_i     ,  // voltages n
+  // input  logic [ 5-1:0] vinp_i     ,  // voltages p
+  // input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
   inout  logic [ 8-1:0] exp_p_io   ,
   inout  logic [ 8-1:0] exp_n_io   ,
@@ -122,7 +122,7 @@ BUFG bufg_clk_50   	(.O (clk_50   ), .I (pll_clk_50   ));
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam NR = 1; // number of address region?
+localparam NR = 2; // number of address region?
 
 // System bus
 sys_bus_if   ps_sys       (.clk  (clk_125), .rstn    (exp_n_o_buf[6]));
@@ -209,36 +209,60 @@ end
 
 
 ////////////////////////////
-wire [7:0] ledArray;
-CPUwriteTest test(
-.clk_i        (		clk_125  					),
-.sys_addr     (		sys_addr  				),
-.sys_wdata    (		sys_wdata 				),
-.sys_sel      (		sys_sel   				),
-.sys_wen      (		sys_wen[0]				),
-.sys_ren      (		sys_ren[0]				),
-.sys_rdata    (		sys_rdata[31:0]		),
-.sys_err      (		sys_err[0]				),
-.sys_ack      (		sys_ack[0]				),
-.testArrayOut	(		ledArray					),
-.adc_raw_in		(		adc_dat_raw_CH1		)
-);
+reg [7:0] ledArray = 8'b10101111;
+// CPUwriteTest test(
+// .clk_i        (		clk_125  					),
+// .sys_addr     (		sys_addr  				),
+// .sys_wdata    (		sys_wdata 				),
+// .sys_sel      (		sys_sel   				),
+// .sys_wen      (		sys_wen[0]				),
+// .sys_ren      (		sys_ren[0]				),
+// .sys_rdata    (		sys_rdata[31:0]		),
+// .sys_err      (		sys_err[0]				),
+// .sys_ack      (		sys_ack[0]				),
+// .testArrayOut	(		ledArray					),
+// .adc_raw_in		(		adc_dat_raw_CH1		)
+// );
 
 
+//----------------Buffering---------------------------------------------//
 
 IOBUF iobuf_led   [8-1:0] (.IO(led_o),    .I(led_o_buf), .T(8'b0 ));
-
 
 // Input with respect to the IO port, so it is from the system to IO port to outside
 // if we want to use the IO port as inputs we set T = 1, use the output of the buffer
 IOBUF iobuf_exp_p_1_inst (.O(exp_p_o_buf[6]), .IO(exp_p_io[6]), .T(1));
 IOBUF iobuf_exp_n_1_inst (.O(exp_n_o_buf[6]), .IO(exp_n_io[6]), .T(1));
+ 
 
-// LED playground
 
+wire [31:0] fir_result;
+
+//-------------------------FIR FILTER TEST------------------------------//
+FIR_filter #( .BW(32), .OBW(32), .NDMAC(16), .NMAC(4))
+  fir_inst 
+  (
+    .datIn(),
+    .datOut(fir_result),
+    .clk(clk_125),
+    .rst(0),
+    // System bus connection 
+    .sys_addr     (    sys_addr          ),
+    .sys_wdata    (    sys_wdata         ),
+    .sys_sel      (    sys_sel           ),
+    .sys_wen      (    sys_wen[0]        ),
+    .sys_ren      (    sys_ren[0]        ),
+    .sys_rdata    (    sys_rdata[31 : 0]   ),
+    .sys_err      (    sys_err[0]        ),
+    .sys_ack      (    sys_ack[0]        )
+    );
+
+//////////////////////////////////////////////////////////////////////////
+
+//------------------------------LED playground--------------------------//
 // assign led_o_buf = exp_p_o_buf ? ({2'b00, adc_dat_raw_CH1[13 : 8]}) : (adc_dat_raw_CH1[7:0]);
 
-assign led_o_buf = ledArray;
+assign led_o_buf = fir_result[31: 31-8];
 
 
 // LED counters
@@ -250,15 +274,14 @@ assign led_o_buf = ledArray;
 // assign led_o_buf[7:1] = exp_n_o_buf[6] ? counter7 : {7{led_blink}};
 
 // always @(posedge clk_25) begin
-// 	if (blinkCounter == 25000000-1) begin
-// 		blinkCounter <= 0;
-// 		led_blink <= ~led_blink;
-// 		counter7 <= counter7+1;
-// 	end else begin
-// 		blinkCounter <= blinkCounter + 1;
-// 	end
+//  if (blinkCounter == 25000000-1) begin
+//    blinkCounter <= 0;
+//    led_blink <= ~led_blink;
+//    counter7 <= counter7+1;
+//  end else begin
+//    blinkCounter <= blinkCounter + 1;
+//  end
 // end
+//////////////////////////////////////////////////////////////////////////
 
-
-//----------------------------------------------------------------------//
 endmodule

@@ -29,7 +29,7 @@
     <Option Name="IPStaticSourceDir" Val="$PPRDIR/RP_playground.ip_user_files/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSANumComputeUnits" Val="16"/>
-    <Option Name="WTXSimLaunchSim" Val="0"/>
+    <Option Name="WTXSimLaunchSim" Val="101"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -75,16 +75,6 @@
           <Attr Name="UserDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../rtl/red_pitaya_pid_block.v"/>
           <Attr Name="ImportTime" Val="1475546741"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/bd/system/hdl/system_wrapper.v">
-        <FileInfo>
-          <Attr Name="UserDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../redPitayaClean/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v"/>
-          <Attr Name="ImportTime" Val="1475684018"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -616,10 +606,10 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/new/serial_sum.sv">
+      <File Path="$PSRCDIR/sources_1/imports/new/coeff_table.sv">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../fir_filter/fir_filter.srcs/sources_1/new/serial_sum.sv"/>
-          <Attr Name="ImportTime" Val="1482765764"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../codeGenerators/coeff_table.sv"/>
+          <Attr Name="ImportTime" Val="1483737705"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -653,9 +643,9 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hdl/myFilter.hwdef"/>
+        <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="myFilter_ooc.xdc"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hw_handoff/myFilter_bd.tcl"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hw_handoff/myFilter.hwh"/>
-        <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="myFilter_ooc.xdc"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hdl/myFilter.v"/>
       </File>
       <File Path="$PSRCDIR/sources_1/new/memoryTest.sv">
@@ -674,13 +664,13 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.hwdef"/>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.v"/>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="zynq_block_ooc.xdc"/>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hw_handoff/zynq_block_bd.tcl"/>
         <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="ip/zynq_block_processing_system7_0_0/zynq_block_processing_system7_0_0.xci">
           <Proxy FileSetName="zynq_block_processing_system7_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.v"/>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="zynq_block_ooc.xdc"/>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.hwdef"/>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hw_handoff/zynq_block_bd.tcl"/>
         <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hw_handoff/zynq_block.hwh"/>
       </File>
       <File Path="$PSRCDIR/sources_1/new/playground_top.sv">
@@ -704,14 +694,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/CPUwriteTest.v">
-        <FileInfo>
-          <Attr Name="UserDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/new/coeff_rom.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -719,17 +701,17 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/FPGA_PID/coeff_table.sv">
+      <File Path="$PSRCDIR/sources_1/new/CPUwriteTest.sv">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../coeff_table.sv"/>
-          <Attr Name="ImportTime" Val="1483592316"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/CPUwriteTest.sv">
+      <File Path="$PSRCDIR/sources_1/imports/new/serial_sum.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../fir_filter/fir_filter.srcs/sources_1/new/serial_sum.sv"/>
+          <Attr Name="ImportTime" Val="1482765764"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -765,14 +747,26 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sim_1/new/fir_filter_TB.sv">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/fir_filter_TB_behav.wcfg">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="test_wrapper"/>
+        <Option Name="TopModule" Val="fir_filter_TB"/>
         <Option Name="TopLib" Val="xil_defaultlib"/>
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>
-        <Option Name="SimMode" Val="post-implementation"/>
         <Option Name="SrcSet" Val="sources_1"/>
+        <Option Name="XSimWcfgFile" Val="$PPRDIR/fir_filter_TB_behav.wcfg"/>
       </Config>
     </FileSet>
     <FileSet Name="clk_wiz_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/clk_wiz_0">
@@ -782,22 +776,6 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0.xml"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_ooc.xdc"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0.xdc"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0.v"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="mmcm_pll_drp_func_7s_mmcm.vh"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0.veo"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_board.xdc"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="mmcm_pll_drp_func_7s_pll.vh"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="doc/clk_wiz_v5_3_changelog.txt"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_sim_netlist.v"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="mmcm_pll_drp_func_us_pll.vh"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_clk_wiz.v"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_stub.vhdl"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="mmcm_pll_drp_func_us_mmcm.vh"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_sim_netlist.vhdl"/>
-        <CompFileExtendedInfo CompFileName="clk_wiz_0.xci" FileRelPathName="clk_wiz_0_stub.v"/>
       </File>
       <Config>
         <Option Name="TopModule" Val="clk_wiz_0"/>
@@ -848,9 +826,7 @@
     </Run>
     <Run Id="zynq_block_processing_system7_0_0_synth_1" Type="Ft3:Synth" SrcSet="zynq_block_processing_system7_0_0" Part="xc7z010clg400-1" ConstrsSet="zynq_block_processing_system7_0_0" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/zynq_block_processing_system7_0_0_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016"/>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -889,9 +865,7 @@
     </Run>
     <Run Id="zynq_block_processing_system7_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="zynq_block_processing_system7_0_0" Description="Default settings for Implementation." SynthRun="zynq_block_processing_system7_0_0_synth_1" IncludeInArchive="false">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2016">
-          <Desc>Default settings for Implementation.</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2016"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
