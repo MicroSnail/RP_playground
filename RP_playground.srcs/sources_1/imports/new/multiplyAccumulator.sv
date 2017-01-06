@@ -39,7 +39,7 @@ module multiplyAccumulator
   input                             rst,
   input                             inputUpdated,
   output  reg [OBW - 1 : 0]         mac_out = 0,
-  output                            mac_done,
+  output  reg                       mac_done = 0,
   output  reg                       execute = 0,
   output  reg                       mac_armed = 1
   
@@ -48,7 +48,8 @@ module multiplyAccumulator
   // reg [$clog2(ND) : 0] rd_addr = 0;
 //  reg execute = 0;
 // wire execute;
-assign mac_done = rd_addr_l_MSB && (~mac_armed);
+// assign mac_done = rd_addr_l_MSB && (~mac_armed);
+wire almost_done = rd_addr_l_MSB && (~mac_armed);
 
 
 // assign execute = (~mac_done) && inputUpdated;
@@ -57,7 +58,6 @@ wire [BW - 1 : 0] debug_current_elem;
 assign debug_current_elem = elem_buf;
 
 reg [BW-1 : 0] elem_buf=0;
-reg delay_exec = 0;
 
 always @(posedge clk) begin
   if (rst) begin
@@ -67,31 +67,24 @@ always @(posedge clk) begin
   end
 end
 
-// only a stub
 
 always @(posedge clk) begin
   if (rst) begin
-    // rd_addr  <=  0;
     mac_out  <=  {(ND * BW - 1){1'b0}};
     mac_armed <= 1;
     execute <= 0;
-    delay_exec <= 0;
   end else begin
     if (mac_armed && inputUpdated) begin
       execute   <= 1;
-      delay_exec <= 1;
+      mac_done  <= 0;
       mac_armed <= 0;
-      // rd_addr   <= 0;
       mac_out   <= 0;
     end else if(execute && ~mac_done) begin
-      if (delay_exec) begin
-        delay_exec <= 0;
-      end else begin
-        mac_out <= mac_out + singleInA * elem_buf;
-      end
-      // rd_addr <= rd_addr + 1;
+      mac_out <= mac_out + singleInA * elem_buf;
     end
     
+    if (almost_done) mac_done <= 1;
+
     if (mac_done) begin
       mac_armed   <= 1;
       execute     <= 0;

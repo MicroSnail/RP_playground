@@ -96,8 +96,8 @@ assign rd_addr_next = rd_addr + 1;
 wire [NMAC-1 : 0] mac_execute;
 
 always @(posedge clk) begin
-  if(&mac_execute) begin
-  // if (sampled) begin      // Be careful with this implementation!
+  // if(&mac_execute) begin
+  if (sampled) begin      // Be careful with this implementation!
     rd_addr_l <= rd_addr_next;
     rd_addr   <= rd_addr_next[$clog2(NDMAC) - 1 : 0];
   end else begin
@@ -129,12 +129,15 @@ assign rst_sampler = rst;
 assign newSample = datIn;
 
 always @(posedge clk) begin
-  if (&mac_armed & ~sampled) begin 
-    flatSample <= {newSample, flatSample[TBW - 1 : BW]};
-    sampled <= 1;
-  end else if (&mac_done) begin
-    sampled <= 0;
+  if(&mac_armed) begin
+    if (~sampled) begin 
+      flatSample <= {newSample, flatSample[TBW - 1 : BW]};
+      sampled <= 1;
+    end else if (&mac_done) begin
+      sampled <= 0;
+    end    
   end
+
 end
 /////////////////////////////////////////////////////////
 
