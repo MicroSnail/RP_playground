@@ -11,14 +11,21 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
+<<<<<<< HEAD
       <ZoomStartTime time="1025000000fs"></ZoomStartTime>
       <ZoomEndTime time="1282119169fs"></ZoomEndTime>
       <Cursor1Time time="1167802000fs"></Cursor1Time>
+=======
+      <ZoomStartTime time="140000000fs"></ZoomStartTime>
+      <ZoomEndTime time="274600001fs"></ZoomEndTime>
+      <Cursor1Time time="220000000fs"></Cursor1Time>
+>>>>>>> parent of 0598954... Moved a chunk of code across always block
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
       <ValueColumnWidth column_width="134"></ValueColumnWidth>
    </column_width_setting>
+<<<<<<< HEAD
    <WVObjectSize size="24" />
    <wave_markers>
       <marker time="3374833000" label="" />
@@ -28,6 +35,15 @@
       <marker time="3645100000" label="" />
       <marker time="3685100000" label="" />
       <marker time="3805000000" label="" />
+=======
+   <WVObjectSize size="29" />
+   <wave_markers>
+      <marker time="3374833000" label="" />
+      <marker time="6545000000" label="" />
+      <marker time="3655100000" label="" />
+      <marker time="3695100000" label="" />
+      <marker time="3735100000" label="" />
+>>>>>>> parent of 0598954... Moved a chunk of code across always block
    </wave_markers>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/led_debug_out" type="array">
       <obj_property name="ElementShortName">led_debug_out[7:0]</obj_property>
@@ -67,16 +83,30 @@
       <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
+<<<<<<< HEAD
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/unit_00/mac_out" type="array">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">mac_out[47:0]</obj_property>
       <obj_property name="ObjectShortName">mac_out[47:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">mac_00_out[47:0]</obj_property>
+=======
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/mac_in" type="array">
+      <obj_property name="ElementShortName">mac_in[13:0]</obj_property>
+      <obj_property name="ObjectShortName">mac_in[13:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+>>>>>>> parent of 0598954... Moved a chunk of code across always block
    </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/output_buffer" type="array">
       <obj_property name="ElementShortName">output_buffer[47:0]</obj_property>
       <obj_property name="ObjectShortName">output_buffer[47:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/mac00" type="array">
+      <obj_property name="ElementShortName">mac00[47:0]</obj_property>
+      <obj_property name="ObjectShortName">mac00[47:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_obtained" type="logic">
@@ -123,11 +153,49 @@
       <obj_property name="CustomSignalColor">#00FF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_addr" type="array">
+      <obj_property name="ElementShortName">smpl_buf_addr[3:0]</obj_property>
+      <obj_property name="ObjectShortName">smpl_buf_addr[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_din" type="array">
+      <obj_property name="ElementShortName">smpl_buf_din[13:0]</obj_property>
+      <obj_property name="ObjectShortName">smpl_buf_din[13:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_dout" type="array">
+      <obj_property name="ElementShortName">smpl_buf_dout[13:0]</obj_property>
+      <obj_property name="ObjectShortName">smpl_buf_dout[13:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_wen" type="logic">
+      <obj_property name="ElementShortName">smpl_buf_wen</obj_property>
+      <obj_property name="ObjectShortName">smpl_buf_wen</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_wen_sampler" type="logic">
+      <obj_property name="ElementShortName">smpl_buf_wen_sampler</obj_property>
+      <obj_property name="ObjectShortName">smpl_buf_wen_sampler</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_wen_2" type="logic">
+      <obj_property name="ElementShortName">smpl_buf_wen_2</obj_property>
+      <obj_property name="ObjectShortName">smpl_buf_wen_2</obj_property>
+   </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer" type="array">
       <obj_property name="ElementShortName">sample_buffer[0:15][31:0]</obj_property>
       <obj_property name="ObjectShortName">sample_buffer[0:15][31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
+<<<<<<< HEAD
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_00_din" type="array">
       <obj_property name="ElementShortName">smpl_buf_00_din[13:0]</obj_property>
       <obj_property name="ObjectShortName">smpl_buf_00_din[13:0]</obj_property>
@@ -143,5 +211,91 @@
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smple_buf_wen_2" type="logic">
       <obj_property name="ElementShortName">smple_buf_wen_2</obj_property>
       <obj_property name="ObjectShortName">smple_buf_wen_2</obj_property>
+=======
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem" type="array">
+      <obj_property name="ElementShortName">mem[0:15][13:0]</obj_property>
+      <obj_property name="ObjectShortName">mem[0:15][13:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[0]" type="array">
+         <obj_property name="ElementShortName">[0][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[1]" type="array">
+         <obj_property name="ElementShortName">[1][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[2]" type="array">
+         <obj_property name="ElementShortName">[2][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[3]" type="array">
+         <obj_property name="ElementShortName">[3][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[4]" type="array">
+         <obj_property name="ElementShortName">[4][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[4][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[5]" type="array">
+         <obj_property name="ElementShortName">[5][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[5][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[6]" type="array">
+         <obj_property name="ElementShortName">[6][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[6][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[7]" type="array">
+         <obj_property name="ElementShortName">[7][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[7][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[8]" type="array">
+         <obj_property name="ElementShortName">[8][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[8][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[9]" type="array">
+         <obj_property name="ElementShortName">[9][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[9][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[10]" type="array">
+         <obj_property name="ElementShortName">[10][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[10][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[11]" type="array">
+         <obj_property name="ElementShortName">[11][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[11][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[12]" type="array">
+         <obj_property name="ElementShortName">[12][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[12][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[13]" type="array">
+         <obj_property name="ElementShortName">[13][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[13][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[14]" type="array">
+         <obj_property name="ElementShortName">[14][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[14][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/xpm_memory_spram_inst/xpm_memory_base_inst/mem[15]" type="array">
+         <obj_property name="ElementShortName">[15][13:0]</obj_property>
+         <obj_property name="ObjectShortName">[15][13:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+>>>>>>> parent of 0598954... Moved a chunk of code across always block
    </wvobject>
 </wave_config>
