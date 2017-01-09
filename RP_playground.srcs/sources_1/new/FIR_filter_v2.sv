@@ -224,15 +224,7 @@ always @(posedge clk) begin
     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
   end
 
-<<<<<<< HEAD
-reg [ROM_AW : 0] addr_counted = 0;
 
-wire [BUF_AW - 1 : 0] rel_buf_addr;
-assign rel_buf_addr = mac_addr - earliest_addr;
-
-
-
-=======
 end
 
 wire [48-1 : 0] mac_00_out;
@@ -348,48 +340,7 @@ MACC_MACRO #(
    .LOAD_DATA(48'b0), // Load accumulator input data, width determined by WIDTH_P parameter
    .RST(mac_clear)    // 1-bit input active high reset
 );
->>>>>>> parent of 0598954... Moved a chunk of code across always block
 
-// Contains a MAC, a ROM (coefficients), and sample RAM
-fir_unit #(
-    .MEM_INIT_FILE    ( "FIR_COEFF_0.MEM"   ), // String, memory file
-    .TNN              ( TNN                 ), // Total number of samples
-    .DW               ( DW                  ), // Data bitwidth
-    .NMAC             ( NMAC                ), // Number of Multiply accumulator
-    .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
-    .ROM_LATENCY      ( ROM_LATENCY         ),  
-    .MAC_LATENCY      ( MAC_LATENCY         )
-      ) unit_00 (
-    .clk            ( clk                   ),
-    .smpl_buf_wen   ( smpl_buf_wen         ),
-    .rom_addr       ( rom_addr              ),
-    .smpl_buf_addr  ( smpl_buf_addr         ),
-    .smpl_buf_din   ( smpl_buf_00_din       ),
-    .smpl_buf_dout  ( smpl_buf_00_dout      ),
-    .mac_out        ( mac_00_out            ),
-    .mac_ce         ( mac_ce                ),
-    .mac_clear      ( mac_clear             )
-  );
-
-// Contains a MAC, a ROM (coefficients), and sample RAM
-fir_unit #(
-    .MEM_INIT_FILE    ( "FIR_COEFF_1.MEM"   ), // String, memory file
-    .TNN              ( TNN                 ), // Total number of samples
-    .DW               ( DW                  ), // Data bitwidth
-    .NMAC             ( NMAC                ), // Number of Multiply accumulator
-    .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
-    .ROM_LATENCY      ( ROM_LATENCY         ),  
-    .MAC_LATENCY      ( MAC_LATENCY         )
-      ) unit_01 (
-    .clk            ( clk                   ),
-    .smpl_buf_wen   ( smpl_buf_wen         ),
-    .rom_addr       ( rom_addr              ),
-    .smpl_buf_addr  ( smpl_buf_addr         ),
-    .smpl_buf_din   ( smpl_buf_01_din       ),
-    .mac_out        ( mac_01_out            ),
-    .mac_ce         ( mac_ce                ),
-    .mac_clear      ( mac_clear             )
-  );
 // Log2 logic to sum MAC outputs 
 
 
