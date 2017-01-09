@@ -201,25 +201,15 @@ assign rel_buf_addr = mac_addr - earliest_addr;
 
 wire [48-1 : 0] mac_00_out;
 
-// module fir_unit #(
-//     parameter MEM_INIT_FILE  = "FIR_COEFF_0.MEM",
-//     parameter TNN            = 16,                     // Total number of samples
-//     parameter DW             = 32,                     // Data bitwidth
-//     parameter NMAC           = 1,                      // Number of Multiply accumulator
-//     parameter ADC_DW         = 14,                     // ADC bitwidth (14-bit for the board we are using)
-//     parameter ROM_LATENCY    = 1,  
-//     parameter MAC_LATENCY    = 2
-
-//   )
-
+// Contains a MAC, a ROM (coefficients), and sample RAM
 fir_unit #(
-    .MEM_INIT_FILE    ( "FIR_COEFF_0.MEM"   ),
-    .TNN              ( 16                  ),          
-    .DW               ( 32                  ),           
-    .NMAC             ( 1                   ),         
-    .ADC_DW           ( 14                  ),       
-    .ROM_LATENCY      ( 1                   ),  
-    .MAC_LATENCY      ( 2                   )
+    .MEM_INIT_FILE    ( "FIR_COEFF_0.MEM"   ), // String, memory file
+    .TNN              ( TNN                 ), // Total number of samples
+    .DW               ( DW                  ), // Data bitwidth
+    .NMAC             ( NMAC                ), // Number of Multiply accumulator
+    .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
+    .ROM_LATENCY      ( ROM_LATENCY         ),  
+    .MAC_LATENCY      ( MAC_LATENCY         )
       ) unit_00 (
     .clk            ( clk                   ),
     .smple_buf_wen  ( smple_buf_wen         ),
