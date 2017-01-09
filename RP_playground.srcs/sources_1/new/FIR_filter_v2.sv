@@ -51,7 +51,7 @@ localparam BUF_RAM_AW = $clog2(ND)  ;
 
 localparam ROM_SIZE     = ND * DW;        // Total number of bits of a single ROM
 localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer for a single MAC
-localparam ROM_LATENCY = 1;               // Must be 1 or higher to infer BRAM, see ROM instantiation template 
+localparam ROM_LATENCY = 1;           // Must be 1 or higher to infer BRAM, see ROM instantiation template 
 localparam MAC_LATENCY = 2;           
 
 // Local registers and bus declaration
@@ -227,6 +227,47 @@ always @(posedge clk) begin
 
 end
 
+// reg [1:0] mac_ce_delay = 0;
+// localparam MAC_CE_LATENCY = 1;
+
+// always @(posedge clk) begin
+
+
+//   // if (rom_addr_en) begin
+//   //   rom_addr <= rom_addr + 1;
+
+//   // end else begin  // This is to accommodate the latency of MAC
+//   //   rom_addr <= 0;
+//   //   if (addr_delay >= MAC_LATENCY) rom_addr_en <= 1;
+//   // end
+//   if (sample_obtained) begin
+//       mac_ce <= 1;
+//   end 
+
+//   if (mac_addr_en) begin
+//     if (mac_ce) begin
+//       mac_addr <= mac_addr + 1;
+//       rom_addr <= rom_addr + 1;
+
+//       addr_counted <= addr_counted + 1;
+//     end
+
+//     if (addr_counted >= ND + MAC_LATENCY - 1) begin
+//       addr_counted <= 0;
+//       mac_ce <= 0;
+//       sample_expired_mac <= ~sample_expired_mac;
+//       mac_addr_en <= 0;
+//       rom_addr_en <= 0;
+//       addr_delay <= 0;
+//     end
+//   end else begin  // This is to accommodate the latencies of MAC and sample RAM
+//     addr_delay <= addr_delay + 1;
+//     rom_addr <= 0;
+//     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
+//   end
+
+// end
+
 wire [48-1 : 0] mac_00_out;
 
 // RAM for storing samples
@@ -340,6 +381,7 @@ MACC_MACRO #(
    .LOAD_DATA(48'b0), // Load accumulator input data, width determined by WIDTH_P parameter
    .RST(mac_clear)    // 1-bit input active high reset
 );
+
 
 // Log2 logic to sum MAC outputs 
 

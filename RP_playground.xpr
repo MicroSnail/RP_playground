@@ -33,10 +33,14 @@
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSANumComputeUnits" Val="16"/>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <Option Name="WTXSimLaunchSim" Val="389"/>
 =======
     <Option Name="WTXSimLaunchSim" Val="371"/>
 >>>>>>> parent of 0598954... Moved a chunk of code across always block
+=======
+    <Option Name="WTXSimLaunchSim" Val="373"/>
+>>>>>>> parent of ff27f30... Modularized FIR_unit
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -767,6 +771,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+<<<<<<< HEAD
       <File Path="$PSRCDIR/sources_1/imports/codeGenerators/FIR_COEFF_1.MEM">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../codeGenerators/FIR_COEFF_1.MEM"/>
@@ -775,6 +780,8 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+=======
+>>>>>>> parent of ff27f30... Modularized FIR_unit
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="playground_top"/>
