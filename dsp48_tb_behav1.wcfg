@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="dsp48_tb_behav1.wdb" id="1">
+         <top_modules>
+            <top_module name="dsp48_tb" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="46133667fs"></ZoomStartTime>
+      <ZoomEndTime time="179533668fs"></ZoomEndTime>
+      <Cursor1Time time="135100000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="175"></NameColumnWidth>
+      <ValueColumnWidth column_width="142"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="8" />
+   <wvobject fp_name="/dsp48_tb/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/counter4" type="array">
+      <obj_property name="ElementShortName">counter4[3:0]</obj_property>
+      <obj_property name="ObjectShortName">counter4[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/mac_ce" type="logic">
+      <obj_property name="ElementShortName">mac_ce</obj_property>
+      <obj_property name="ObjectShortName">mac_ce</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/rom_addr" type="array">
+      <obj_property name="ElementShortName">rom_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">rom_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/data_00" type="array">
+      <obj_property name="ElementShortName">data_00[17:0]</obj_property>
+      <obj_property name="ObjectShortName">data_00[17:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/mac00" type="array">
+      <obj_property name="ElementShortName">mac00[17:0]</obj_property>
+      <obj_property name="ObjectShortName">mac00[17:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/mac_load" type="logic">
+      <obj_property name="ElementShortName">mac_load</obj_property>
+      <obj_property name="ObjectShortName">mac_load</obj_property>
+   </wvobject>
+   <wvobject fp_name="/dsp48_tb/load_data" type="array">
+      <obj_property name="ElementShortName">load_data[47:0]</obj_property>
+      <obj_property name="ObjectShortName">load_data[47:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+</wave_config>

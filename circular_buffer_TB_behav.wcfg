@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="circular_buffer_TB_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="circular_buffer_TB" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="334500001fs"></ZoomEndTime>
+      <Cursor1Time time="20000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="175"></NameColumnWidth>
+      <ValueColumnWidth column_width="142"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="23" />
+   <wvobject fp_name="group4379" type="group">
+      <obj_property name="label">MAC_current_elem</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/new_sample" type="array">
+      <obj_property name="ElementShortName">new_sample[31:0]</obj_property>
+      <obj_property name="ObjectShortName">new_sample[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/s_s_handle" type="logic">
+      <obj_property name="ElementShortName">s_s_handle</obj_property>
+      <obj_property name="ObjectShortName">s_s_handle</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/s_t_handle" type="logic">
+      <obj_property name="ElementShortName">s_t_handle</obj_property>
+      <obj_property name="ObjectShortName">s_t_handle</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/t_s_handle" type="logic">
+      <obj_property name="ElementShortName">t_s_handle</obj_property>
+      <obj_property name="ObjectShortName">t_s_handle</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/t_t_handle" type="logic">
+      <obj_property name="ElementShortName">t_t_handle</obj_property>
+      <obj_property name="ObjectShortName">t_t_handle</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/sampleReady" type="logic">
+      <obj_property name="ElementShortName">sampleReady</obj_property>
+      <obj_property name="ObjectShortName">sampleReady</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/traverserReady" type="logic">
+      <obj_property name="ElementShortName">traverserReady</obj_property>
+      <obj_property name="ObjectShortName">traverserReady</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/sample_data" type="array">
+      <obj_property name="ElementShortName">sample_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">sample_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/bufferData" type="array">
+      <obj_property name="ElementShortName">bufferData[31:0]</obj_property>
+      <obj_property name="ObjectShortName">bufferData[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples_write_complete" type="logic">
+      <obj_property name="ElementShortName">samples_write_complete</obj_property>
+      <obj_property name="ObjectShortName">samples_write_complete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples_traverse_complete" type="logic">
+      <obj_property name="ElementShortName">samples_traverse_complete</obj_property>
+      <obj_property name="ObjectShortName">samples_traverse_complete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/rel_addr" type="array">
+      <obj_property name="ElementShortName">rel_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">rel_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/data_out" type="array">
+      <obj_property name="ElementShortName">data_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_out[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/data_in" type="array">
+      <obj_property name="ElementShortName">data_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_in[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/writeComplete" type="logic">
+      <obj_property name="ElementShortName">writeComplete</obj_property>
+      <obj_property name="ObjectShortName">writeComplete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/traverseComplete" type="logic">
+      <obj_property name="ElementShortName">traverseComplete</obj_property>
+      <obj_property name="ObjectShortName">traverseComplete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/rel_addr" type="array">
+      <obj_property name="ElementShortName">rel_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">rel_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/rd_addr_next" type="array">
+      <obj_property name="ElementShortName">rd_addr_next[8:0]</obj_property>
+      <obj_property name="ObjectShortName">rd_addr_next[8:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/rd_addr" type="array">
+      <obj_property name="ElementShortName">rd_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">rd_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/wr_addr_next" type="array">
+      <obj_property name="ElementShortName">wr_addr_next[8:0]</obj_property>
+      <obj_property name="ObjectShortName">wr_addr_next[8:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/circular_buffer_TB/samples/wr_addr" type="array">
+      <obj_property name="ElementShortName">wr_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">wr_addr[7:0]</obj_property>
+   </wvobject>
+</wave_config>

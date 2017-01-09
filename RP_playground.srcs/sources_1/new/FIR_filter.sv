@@ -24,8 +24,8 @@ module FIR_filter
   #(
       parameter BW = 32,            //data width
       parameter OBW = BW,         //output width
-      parameter NDMAC= 16,        //number of data each MAC handle
-      parameter NMAC = 4           //number of MACs
+      parameter AW = 8,           // address width, NDMAC = 2^AW
+      parameter NMAC = 8           //number of MACs
   )
   (
     input       [BW - 1 : 0]                datIn,
@@ -50,7 +50,9 @@ module FIR_filter
 // is given by (NDMAC * NMAC * dataBitwidth)
 localparam TBW = NDMAC * NMAC * BW; // total bitwidth (# of total coeff * BW)
 localparam TNN = NDMAC * NMAC;
-localparam MACBW  = NDMAC * BW;     // bitwidth of data/coeffs in a MAC
+localparam NDMAC= 1 << AW;    //number of data each MAC handle
+localparam MACBW  = NDMAC * BW;   // bitwidth of data/coeffs in a MAC
+
 /////////////////////////////////////////////////////////
 
 
@@ -87,9 +89,9 @@ end
 
 //--------------Coefficient ROM for MACs---------------//
 wire [ NMAC * BW - 1 : 0] coeffs;
-wire  [$clog2(NDMAC) : 0] rd_addr_next; // with one bit more for counting
-reg  [$clog2(NDMAC)     : 0] rd_addr_l  = 0; // =rd_addr - 1;
-reg  [$clog2(NDMAC) - 1 : 0] rd_addr    = 0;
+wire  [AW : 0] rd_addr_next; // with one bit more for counting
+reg  [AW     : 0] rd_addr_l  = 0; // =rd_addr - 1;
+reg  [AW - 1 : 0] rd_addr    = 0;
 
 assign rd_addr_next = rd_addr + 1;
 
@@ -99,7 +101,7 @@ always @(posedge clk) begin
   // if(&mac_execute) begin
   if (sampled) begin      // Be careful with this implementation!
     rd_addr_l <= rd_addr_next;
-    rd_addr   <= rd_addr_next[$clog2(NDMAC) - 1 : 0];
+    rd_addr   <= rd_addr_next[AW - 1 : 0];
   end else begin
     rd_addr   <= 0;
     rd_addr_l <= 0;
@@ -110,11 +112,15 @@ end
 coeff_table coeff_table_inst (
     .clk    (  clk  ),
     .en     (  1  ),
-    .addr   (  rd_addr  ),      // Supply 4-bit address
-    .data_01 ( coeffs[01 * BW - 1: 00 * BW] ),  //earliest
+    .addr   (  rd_addr  ),      // Supply 8-bit address
+    .data_01 ( coeffs[01 * BW - 1: 00 * BW] ),
     .data_02 ( coeffs[02 * BW - 1: 01 * BW] ),
     .data_03 ( coeffs[03 * BW - 1: 02 * BW] ),
-    .data_04 ( coeffs[04 * BW - 1: 03 * BW] )     // Supply 32-bit bus
+    .data_04 ( coeffs[04 * BW - 1: 03 * BW] ),
+    .data_05 ( coeffs[05 * BW - 1: 04 * BW] ),
+    .data_06 ( coeffs[06 * BW - 1: 05 * BW] ),
+    .data_07 ( coeffs[07 * BW - 1: 06 * BW] ),
+    .data_08 ( coeffs[08 * BW - 1: 07 * BW] )     // Supply 32-bit bus
 );
 /////////////////////////////////////////////////////////
 
@@ -173,7 +179,7 @@ multiplyAccumulator
     // .inB(flatSample),
     .inB(debugSample),
     .rd_addr(rd_addr),
-    .rd_addr_l_MSB(rd_addr_l[$clog2(NDMAC)]),
+    .rd_addr_l_MSB(rd_addr_l[AW]),
     .inputUpdated(sampled),
     .clk(clk),
     .rst(1'b0),

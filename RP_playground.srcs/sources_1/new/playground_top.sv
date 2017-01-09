@@ -234,35 +234,75 @@ IOBUF iobuf_led   [8-1:0] (.IO(led_o),    .I(led_o_buf), .T(8'b0 ));
 IOBUF iobuf_exp_p_1_inst (.O(exp_p_o_buf[6]), .IO(exp_p_io[6]), .T(1));
 IOBUF iobuf_exp_n_1_inst (.O(exp_n_o_buf[6]), .IO(exp_n_io[6]), .T(1));
  
-
+// assign led_o_buf = ledArray;
 
 wire [31:0] fir_result;
 
 //-------------------------FIR FILTER TEST------------------------------//
-FIR_filter #( .BW(32), .OBW(32), .NDMAC(16), .NMAC(4))
-  fir_inst 
+// FIR_filter #( .BW(32), .OBW(32), .AW(8), .NMAC(8))
+//   fir_inst 
+//   (
+//     .datIn(),
+//     .datOut(fir_result),
+//     .clk(clk_125),
+//     .rst(0),
+//     // System bus connection 
+//     .sys_addr     (    sys_addr          ),
+//     .sys_wdata    (    sys_wdata         ),
+//     .sys_sel      (    sys_sel           ),
+//     .sys_wen      (    sys_wen[0]        ),
+//     .sys_ren      (    sys_ren[0]        ),
+//     .sys_rdata    (    sys_rdata[31 : 0]   ),
+//     .sys_err      (    sys_err[0]        ),
+//     .sys_ack      (    sys_ack[0]        )
+//     );
+
+//////////////////////////////////////////////////////////////////////////
+
+//-------------------------FIR FILTER TEST------------------------------//
+// FIR_filter_v2 #(
+//     .TNN      ( 2048  ), 
+//     .DW       ( 32    ),  
+//     .NMAC     ( 2     )
+//   )
+//   fir_inst 
+//   (
+//     .clk    (clk_125),
+//     .led_debug_out(led_o_buf),
+//     // System bus connection 
+//     .sys_addr     (    sys_addr          ),
+//     .sys_wdata    (    sys_wdata         ),
+//     .sys_sel      (    sys_sel           ),
+//     .sys_wen      (    sys_wen[0]        ),
+//     .sys_ren      (    sys_ren[0]        ),
+//     .sys_rdata    (    sys_rdata[31 : 0]   ),
+//     .sys_err      (    sys_err[0]        ),
+//     .sys_ack      (    sys_ack[0]        )
+//     );
+
+FIR_filter_v2 #(
+    .TNN(512),   // Total number of samples
+    .DW(32),     // Data bitwidth
+    .NMAC(1),      // Number of Multiply accumulator
+    .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
+  )
+  filter_test
   (
-    .datIn(),
-    .datOut(fir_result),
-    .clk(clk_125),
-    .rst(0),
-    // System bus connection 
-    .sys_addr     (    sys_addr          ),
-    .sys_wdata    (    sys_wdata         ),
-    .sys_sel      (    sys_sel           ),
-    .sys_wen      (    sys_wen[0]        ),
-    .sys_ren      (    sys_ren[0]        ),
-    .sys_rdata    (    sys_rdata[31 : 0]   ),
-    .sys_err      (    sys_err[0]        ),
-    .sys_ack      (    sys_ack[0]        )
-    );
+    .sample(adc_dat_raw_CH1),
+    .result(fir_result),
+    .clk(clk_125)// Input clock
+
+  );
+
+assign led_o_buf = fir_result[7:0];
+
 
 //////////////////////////////////////////////////////////////////////////
 
 //------------------------------LED playground--------------------------//
 // assign led_o_buf = exp_p_o_buf ? ({2'b00, adc_dat_raw_CH1[13 : 8]}) : (adc_dat_raw_CH1[7:0]);
 
-assign led_o_buf = fir_result[31: 31-8];
+// 
 
 
 // LED counters
