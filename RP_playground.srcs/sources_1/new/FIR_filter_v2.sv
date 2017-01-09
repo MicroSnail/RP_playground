@@ -92,6 +92,11 @@ assign sample_expired = sample_expired_mac ^ sample_expired_sampler;
 reg [47:0] output_buffer = 0;
 assign result = output_buffer;
 
+wire [48-1 : 0] mac_00_out;
+wire [48-1 : 0] mac_01_out;
+
+wire [DW-1 : 0] stage1_sum;
+assign stage1_sum = mac_01_out + mac_00_out;
 
 
 // Signals to activate MAC and clear MAC
@@ -108,14 +113,17 @@ reg [2:0] sampler_delay = 0;
 // reg [BUF_AW - 1 : 0]  smpl_buf_addr = 0;
 wire [BUF_RAM_AW - 1 : 0]  smpl_buf_addr;
 wire [ADC_DW - 1 : 0] smpl_buf_00_din;
+wire [ADC_DW - 1 : 0] smpl_buf_01_din;
 wire [ADC_DW - 1 : 0] smpl_buf_00_dout;
-assign smpl_buf_00_din = sample_in;
-assign smpl_buf_addr = smple_buf_wen ? earliest_addr : mac_addr;
 
-wire smple_buf_wen;
-reg  smple_buf_wen_sampler = 0;
-reg  smple_buf_wen_2 = 1;
-assign smple_buf_wen = smple_buf_wen_2 ^ smple_buf_wen_sampler;
+assign smpl_buf_00_din = sample_in;
+assign smpl_buf_01_din = smpl_buf_00_dout;
+assign smpl_buf_addr = smpl_buf_wen ? earliest_addr : mac_addr;
+
+wire smpl_buf_wen;
+reg  smpl_buf_wen_sampler = 0;
+reg  smpl_buf_wen_2 = 1;
+assign smpl_buf_wen = smpl_buf_wen_2 ^ smpl_buf_wen_sampler;
 
 // Controls the signaling for a new sample and the need for a new sample
 always @(posedge clk) begin
@@ -126,7 +134,7 @@ always @(posedge clk) begin
           sample_buffer[earliest_addr] <= {{(DW - ADC_DW){1'b0}}, sample_in};
           // sample_obtained   <= 1'b1;      
           
-          // smple_buf_wen_sampler <= ~smple_buf_wen_sampler;          
+          // smpl_buf_wen_sampler <= ~smpl_buf_wen_sampler;          
           // latest_addr       <= earliest_addr;
           mac_clear <= 1'b0;
         end
@@ -134,11 +142,12 @@ always @(posedge clk) begin
       (2'b11):  
         begin // FIR finishes computation, now we need a new sample_in
           sample_obtained_1 <= ~sample_obtained_1;
-          smple_buf_wen_sampler <= ~smple_buf_wen_sampler;          
-          output_buffer   <= mac_00_out;
+          smpl_buf_wen_sampler <= ~smpl_buf_wen_sampler;          
+          output_buffer   <= stage1_sum;
           mac_clear       <= 1'b1;
           sampler_en      <= 1'b0;
           sampler_delay   <= 0;
+
         end
       (2'b01):
         begin
@@ -154,8 +163,8 @@ always @(posedge clk) begin
     // end
   end
 
-  if (smple_buf_wen) begin
-    smple_buf_wen_2 <= ~smple_buf_wen_2;
+  if (smpl_buf_wen) begin
+    smpl_buf_wen_2 <= ~smpl_buf_wen_2;
     sample_obtained_2 <= ~sample_obtained_2;
     sample_expired_sampler    <= ~sample_expired_sampler;
     latest_addr <= earliest_addr;
@@ -199,7 +208,8 @@ reg [ROM_AW : 0] addr_counted = 0;
 wire [BUF_AW - 1 : 0] rel_buf_addr;
 assign rel_buf_addr = mac_addr - earliest_addr;
 
-wire [48-1 : 0] mac_00_out;
+
+
 
 // Contains a MAC, a ROM (coefficients), and sample RAM
 fir_unit #(
@@ -212,16 +222,37 @@ fir_unit #(
     .MAC_LATENCY      ( MAC_LATENCY         )
       ) unit_00 (
     .clk            ( clk                   ),
-    .smple_buf_wen  ( smple_buf_wen         ),
+    .smpl_buf_wen   ( smpl_buf_wen         ),
     .rom_addr       ( rom_addr              ),
     .smpl_buf_addr  ( smpl_buf_addr         ),
     .smpl_buf_din   ( smpl_buf_00_din       ),
+    .smpl_buf_dout  ( smpl_buf_00_dout      ),
     .mac_out        ( mac_00_out            ),
     .mac_ce         ( mac_ce                ),
     .mac_clear      ( mac_clear             )
   );
 
+// Contains a MAC, a ROM (coefficients), and sample RAM
+fir_unit #(
+    .MEM_INIT_FILE    ( "FIR_COEFF_1.MEM"   ), // String, memory file
+    .TNN              ( TNN                 ), // Total number of samples
+    .DW               ( DW                  ), // Data bitwidth
+    .NMAC             ( NMAC                ), // Number of Multiply accumulator
+    .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
+    .ROM_LATENCY      ( ROM_LATENCY         ),  
+    .MAC_LATENCY      ( MAC_LATENCY         )
+      ) unit_01 (
+    .clk            ( clk                   ),
+    .smpl_buf_wen   ( smpl_buf_wen         ),
+    .rom_addr       ( rom_addr              ),
+    .smpl_buf_addr  ( smpl_buf_addr         ),
+    .smpl_buf_din   ( smpl_buf_01_din       ),
+    .mac_out        ( mac_01_out            ),
+    .mac_ce         ( mac_ce                ),
+    .mac_clear      ( mac_clear             )
+  );
 // Log2 logic to sum MAC outputs 
+
 
 
 //  System bus connection

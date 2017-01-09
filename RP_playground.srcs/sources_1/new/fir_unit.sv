@@ -35,11 +35,12 @@ module fir_unit #(
   )
 ( 
   input                           clk,
-  input                           smple_buf_wen,
+  input                           smpl_buf_wen,
 
   input [ROM_AW - 1 : 0]          rom_addr,
   input [BUF_RAM_AW - 1 : 0]      smpl_buf_addr,
   input [ADC_DW - 1 : 0]          smpl_buf_din,
+  output  [ADC_DW - 1 : 0]        smpl_buf_dout, 
   output  [48-1 : 0]              mac_out,
   input                           mac_ce,
   input                           mac_clear
@@ -51,7 +52,7 @@ localparam ROM_SIZE     = ND * DW;        // Total number of bits of a single RO
 localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer for a single MAC
 
 wire  [DW - 1 : 0]        coe_out;
-wire [ADC_DW - 1 : 0] smpl_buf_dout;
+// wire [ADC_DW - 1 : 0] smpl_buf_dout;
 
 // RAM for storing samples
 // xpm_memory_spram: Single Port RAM
@@ -88,7 +89,7 @@ xpm_memory_spram # (
   .rsta           (1'b0),
   .ena            (1'b1),
   .regcea         (1'b1),
-  .wea            (smple_buf_wen),
+  .wea            (smpl_buf_wen),
   .addra          (smpl_buf_addr),
   .dina           (smpl_buf_din),
   .injectsbiterra (1'b0),

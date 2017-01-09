@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="FIR_filter_v2_TB_behav1.wdb" id="1">
+      <db_ref path="FIR_filter_v2_TB_behav.wdb" id="1">
          <top_modules>
             <top_module name="FIR_filter_v2_TB" />
             <top_module name="glbl" />
@@ -11,22 +11,22 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="15887833333fs"></ZoomStartTime>
-      <ZoomEndTime time="16022433334fs"></ZoomEndTime>
-      <Cursor1Time time="16000000000fs"></Cursor1Time>
+      <ZoomStartTime time="1025000000fs"></ZoomStartTime>
+      <ZoomEndTime time="1282119169fs"></ZoomEndTime>
+      <Cursor1Time time="1167802000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
-      <ValueColumnWidth column_width="138"></ValueColumnWidth>
+      <ValueColumnWidth column_width="134"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="25" />
+   <WVObjectSize size="24" />
    <wave_markers>
       <marker time="3374833000" label="" />
       <marker time="6545000000" label="" />
-      <marker time="3645100000" label="" />
-      <marker time="3685100000" label="" />
       <marker time="3725100000" label="" />
       <marker time="3765100000" label="" />
+      <marker time="3645100000" label="" />
+      <marker time="3685100000" label="" />
       <marker time="3805000000" label="" />
    </wave_markers>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/led_debug_out" type="array">
@@ -60,19 +60,19 @@
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/coe_00" type="array">
-      <obj_property name="ElementShortName">coe_00[31:0]</obj_property>
-      <obj_property name="ObjectShortName">coe_00[31:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/rel_buf_addr" type="array">
       <obj_property name="ElementShortName">rel_buf_addr[3:0]</obj_property>
       <obj_property name="ObjectShortName">rel_buf_addr[3:0]</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/unit_00/mac_out" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">mac_out[47:0]</obj_property>
+      <obj_property name="ObjectShortName">mac_out[47:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="label">mac_00_out[47:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/output_buffer" type="array">
       <obj_property name="ElementShortName">output_buffer[47:0]</obj_property>
@@ -127,94 +127,10 @@
       <obj_property name="ElementShortName">sample_buffer[0:15][31:0]</obj_property>
       <obj_property name="ObjectShortName">sample_buffer[0:15][31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[0]" type="array">
-         <obj_property name="ElementShortName">[0][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[0][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[1]" type="array">
-         <obj_property name="ElementShortName">[1][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[1][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[2]" type="array">
-         <obj_property name="ElementShortName">[2][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[2][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[3]" type="array">
-         <obj_property name="ElementShortName">[3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[3][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[4]" type="array">
-         <obj_property name="ElementShortName">[4][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[4][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[5]" type="array">
-         <obj_property name="ElementShortName">[5][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[5][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[6]" type="array">
-         <obj_property name="ElementShortName">[6][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[6][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[7]" type="array">
-         <obj_property name="ElementShortName">[7][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[7][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[8]" type="array">
-         <obj_property name="ElementShortName">[8][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[8][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[9]" type="array">
-         <obj_property name="ElementShortName">[9][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[9][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[10]" type="array">
-         <obj_property name="ElementShortName">[10][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[10][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[11]" type="array">
-         <obj_property name="ElementShortName">[11][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[11][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[12]" type="array">
-         <obj_property name="ElementShortName">[12][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[12][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[13]" type="array">
-         <obj_property name="ElementShortName">[13][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[13][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[14]" type="array">
-         <obj_property name="ElementShortName">[14][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[14][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/sample_buffer[15]" type="array">
-         <obj_property name="ElementShortName">[15][31:0]</obj_property>
-         <obj_property name="ObjectShortName">[15][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
    </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_00_din" type="array">
       <obj_property name="ElementShortName">smpl_buf_00_din[13:0]</obj_property>
       <obj_property name="ObjectShortName">smpl_buf_00_din[13:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smpl_buf_00_dout" type="array">
-      <obj_property name="ElementShortName">smpl_buf_00_dout[13:0]</obj_property>
-      <obj_property name="ObjectShortName">smpl_buf_00_dout[13:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/FIR_filter_v2_TB/filter_inst/smple_buf_wen" type="logic">
       <obj_property name="ElementShortName">smple_buf_wen</obj_property>
