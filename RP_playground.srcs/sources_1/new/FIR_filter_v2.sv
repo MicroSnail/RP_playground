@@ -161,37 +161,9 @@ always @(posedge clk) begin
     latest_addr <= earliest_addr;
     mac_addr    <= earliest_addr + 1;  // need the new earliest address
   end
-
   if (sample_obtained) begin
       mac_ce <= 1;
   end 
-end 
-
-
-// a counter add latencies to the start of addr advancements
-reg [2:0] addr_delay = 0; 
-reg mac_addr_en = 1;
-reg rom_addr_en = 1;
-
-reg [ROM_AW : 0] addr_counted = 0;
-
-wire [BUF_AW - 1 : 0] rel_buf_addr;
-assign rel_buf_addr = mac_addr - earliest_addr;
-
-// reg [1:0] mac_ce_delay = 0;
-// localparam MAC_CE_LATENCY = 1;
-
-always @(posedge clk) begin
-
-
-  // if (rom_addr_en) begin
-  //   rom_addr <= rom_addr + 1;
-
-  // end else begin  // This is to accommodate the latency of MAC
-  //   rom_addr <= 0;
-  //   if (addr_delay >= MAC_LATENCY) rom_addr_en <= 1;
-  // end
-
 
   if (mac_addr_en) begin
     if (mac_ce) begin
@@ -214,8 +186,59 @@ always @(posedge clk) begin
     rom_addr <= 0;
     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
   end
+end 
 
-end
+
+// a counter add latencies to the start of addr advancements
+reg [2:0] addr_delay = 0; 
+reg mac_addr_en = 1;
+reg rom_addr_en = 1;
+
+reg [ROM_AW : 0] addr_counted = 0;
+
+wire [BUF_AW - 1 : 0] rel_buf_addr;
+assign rel_buf_addr = mac_addr - earliest_addr;
+
+// reg [1:0] mac_ce_delay = 0;
+// localparam MAC_CE_LATENCY = 1;
+
+// always @(posedge clk) begin
+
+
+//   // if (rom_addr_en) begin
+//   //   rom_addr <= rom_addr + 1;
+
+//   // end else begin  // This is to accommodate the latency of MAC
+//   //   rom_addr <= 0;
+//   //   if (addr_delay >= MAC_LATENCY) rom_addr_en <= 1;
+//   // end
+//   if (sample_obtained) begin
+//       mac_ce <= 1;
+//   end 
+
+//   if (mac_addr_en) begin
+//     if (mac_ce) begin
+//       mac_addr <= mac_addr + 1;
+//       rom_addr <= rom_addr + 1;
+
+//       addr_counted <= addr_counted + 1;
+//     end
+
+//     if (addr_counted >= ND + MAC_LATENCY - 1) begin
+//       addr_counted <= 0;
+//       mac_ce <= 0;
+//       sample_expired_mac <= ~sample_expired_mac;
+//       mac_addr_en <= 0;
+//       rom_addr_en <= 0;
+//       addr_delay <= 0;
+//     end
+//   end else begin  // This is to accommodate the latencies of MAC and sample RAM
+//     addr_delay <= addr_delay + 1;
+//     rom_addr <= 0;
+//     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
+//   end
+
+// end
 
 wire [48-1 : 0] mac_00_out;
 

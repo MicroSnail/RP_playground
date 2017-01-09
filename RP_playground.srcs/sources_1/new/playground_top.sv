@@ -281,14 +281,14 @@ wire [31:0] fir_result;
 //     );
 
 FIR_filter_v2 #(
-    .TNN(512),   // Total number of samples
+    .TNN(16),   // Total number of samples
     .DW(32),     // Data bitwidth
     .NMAC(1),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test
   (
-    .sample(adc_dat_raw_CH1),
+    .sample_in(adc_dat_raw_CH1),
     .result(fir_result),
     .clk(clk_125)// Input clock
 
