@@ -92,12 +92,6 @@ assign sample_expired = sample_expired_mac ^ sample_expired_sampler;
 reg [47:0] output_buffer = 0;
 assign result = output_buffer;
 
-wire [48-1 : 0] mac_00_out;
-wire [48-1 : 0] mac_01_out;
-
-wire [DW-1 : 0] stage1_sum;
-assign stage1_sum = mac_01_out + mac_00_out;
-
 
 // Signals to activate MAC and clear MAC
 reg mac_clear = 0;
@@ -112,19 +106,31 @@ reg [2:0] sampler_delay = 0;
 // For sample_in RAM
 // reg [BUF_AW - 1 : 0]  smpl_buf_addr = 0;
 wire [BUF_RAM_AW - 1 : 0]  smpl_buf_addr;
+
+// FIR unit specific in/out's
 wire [ADC_DW - 1 : 0] smpl_buf_00_din;
 wire [ADC_DW - 1 : 0] smpl_buf_01_din;
-wire [ADC_DW - 1 : 0] smpl_buf_00_dout;
 
+wire [ADC_DW - 1 : 0] earliest_sample_00_out;
+wire [ADC_DW - 1 : 0] earliest_sample_01_out;
 
+wire [48-1 : 0] mac_00_out;
+wire [48-1 : 0] mac_01_out;
+
+wire [DW-1 : 0] stage1_sum;
+assign stage1_sum = mac_01_out + mac_00_out;
+
+// FIR unit sample RAM earlieast --> latest sample passing
+assign smpl_buf_00_din = earliest_sample_01_out;
+assign smpl_buf_01_din = sample_in;
+
+// FIR unit shared signals
 wire smpl_buf_wen;
 reg  smpl_buf_wen_sampler = 0;
 reg  smpl_buf_wen_2 = 1;
 assign smpl_buf_wen = smpl_buf_wen_2 ^ smpl_buf_wen_sampler;
-
-assign smpl_buf_00_din = sample_in;
-assign smpl_buf_01_din = smpl_buf_00_dout;
 assign smpl_buf_addr = smpl_buf_wen ? earliest_addr : mac_addr;
+
 
 
 
@@ -137,6 +143,10 @@ reg [ROM_AW : 0] addr_counted = 0;
 
 wire [BUF_AW - 1 : 0] rel_buf_addr;
 assign rel_buf_addr = mac_addr - earliest_addr;
+
+wire is_earliest_addr;
+assign is_earliest_addr = (addr_counted==ND);
+
 
 // Controls the signaling for a new sample and the need for a new sample
 always @(posedge clk) begin
@@ -156,7 +166,7 @@ always @(posedge clk) begin
         begin // FIR finishes computation, now we need a new sample_in
           sample_obtained_1 <= ~sample_obtained_1;
           smpl_buf_wen_sampler <= ~smpl_buf_wen_sampler;          
-          output_buffer   <= mac_00_out;
+          output_buffer   <= stage1_sum;
           mac_clear       <= 1'b1;
           sampler_en      <= 1'b0;
           sampler_delay   <= 0;
@@ -187,18 +197,6 @@ always @(posedge clk) begin
   if (sample_obtained) begin
       mac_ce <= 1;
   end 
-end 
-
-
-
-
-// reg [1:0] mac_ce_delay = 0;
-// localparam MAC_CE_LATENCY = 1;
-wire is_earliest_addr;
-assign is_earliest_addr = (addr_counted==ND);
-
-
-always @(posedge clk) begin
 
   if (mac_addr_en) begin
     if (mac_ce) begin
@@ -220,8 +218,10 @@ always @(posedge clk) begin
     addr_delay <= addr_delay + 1;
     rom_addr <= 0;
     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
-  end
-end
+  end  
+end 
+
+
 
 
 
@@ -338,7 +338,6 @@ end
 
 // Log2 logic to sum MAC outputs 
 
-wire [ADC_DW - 1 : 0] earliest_sample_00_out;
 
 
 // Contains a MAC, a ROM (coefficients), and sample RAM
@@ -362,6 +361,32 @@ fir_unit #(
     .earliest_sample_out    ( earliest_sample_00_out ),
     .update_earliest_buffer ( is_earliest_addr       )
   );
+
+// Contains a MAC, a ROM (coefficients), and sample RAM
+fir_unit #(
+    .MEM_INIT_FILE    ( "FIR_COEFF_1.MEM"   ), // String, memory file
+    .TNN              ( TNN                 ), // Total number of samples
+    .DW               ( DW                  ), // Data bitwidth
+    .NMAC             ( NMAC                ), // Number of Multiply accumulator
+    .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
+    .ROM_LATENCY      ( ROM_LATENCY         ),  
+    .MAC_LATENCY      ( MAC_LATENCY         )
+      ) unit_01 (
+    .clk            ( clk                   ),
+    .smpl_buf_wen   ( smpl_buf_wen          ),
+    .rom_addr       ( rom_addr              ),
+    .smpl_buf_addr  ( smpl_buf_addr         ),
+    .smpl_buf_din   ( smpl_buf_01_din       ),
+    .mac_out        ( mac_01_out            ),
+    .mac_ce         ( mac_ce                ),
+    .mac_clear      ( mac_clear             ),
+    .earliest_sample_out    ( earliest_sample_01_out ),
+    .update_earliest_buffer ( is_earliest_addr       )
+  );
+
+
+
+
 
 
 //  System bus connection

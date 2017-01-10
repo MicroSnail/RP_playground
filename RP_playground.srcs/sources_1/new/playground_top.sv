@@ -280,19 +280,19 @@ wire [31:0] fir_result;
 //     .sys_ack      (    sys_ack[0]        )
 //     );
 
-// FIR_filter_v2 #(
-//     .TNN(512),   // Total number of samples
-//     .DW(32),     // Data bitwidth
-//     .NMAC(1),      // Number of Multiply accumulator
-//     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
-//   )
-//   filter_test
-//   (
-//     .sample(adc_dat_raw_CH1),
-//     .result(fir_result),
-//     .clk(clk_125)// Input clock
+FIR_filter_v2 #(
+    .TNN(1024),   // Total number of samples
+    .DW(32),     // Data bitwidth
+    .NMAC(2),      // Number of Multiply accumulator
+    .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
+  )
+  filter_test
+  (
+    .sample_in(adc_dat_raw_CH1),
+    .result(fir_result),
+    .clk(clk_125)// Input clock
 
-//   );
+  );
 
 assign led_o_buf = fir_result[7:0];
 

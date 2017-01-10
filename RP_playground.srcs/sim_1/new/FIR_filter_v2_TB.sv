@@ -37,16 +37,16 @@ end
 
 
 FIR_filter_v2 #(
-    .TNN(16),   // Total number of samples
+    .TNN(32),   // Total number of samples
     .DW(32),     // Data bitwidth
-    .NMAC(1),      // Number of Multiply accumulator
+    .NMAC(2),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_inst
   (
     .sample_in(sample),
     .clk(clk)// Input clock
-
+    
   );
 
 endmodule
