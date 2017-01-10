@@ -32,7 +32,7 @@
     <Option Name="IPStaticSourceDir" Val="$PPRDIR/RP_playground.ip_user_files/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSANumComputeUnits" Val="16"/>
-    <Option Name="WTXSimLaunchSim" Val="437"/>
+    <Option Name="WTXSimLaunchSim" Val="507"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -647,8 +647,8 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hdl/myFilter.hwdef"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="myFilter_ooc.xdc"/>
+        <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hdl/myFilter.hwdef"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hw_handoff/myFilter_bd.tcl"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hw_handoff/myFilter.hwh"/>
         <CompFileExtendedInfo CompFileName="myFilter.bd" FileRelPathName="hdl/myFilter.v"/>
@@ -757,18 +757,18 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/codeGenerators/FIR_COEFF_0.MEM">
+      <File Path="$PSRCDIR/sources_1/imports/codeGenerators/FIR_COEFF_00.MEM">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../codeGenerators/FIR_COEFF_0.MEM"/>
-          <Attr Name="ImportTime" Val="1484066594"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../codeGenerators/FIR_COEFF_00.MEM"/>
+          <Attr Name="ImportTime" Val="1484080650"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/codeGenerators/FIR_COEFF_1.MEM">
+      <File Path="$PSRCDIR/sources_1/imports/codeGenerators/FIR_COEFF_01.MEM">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../codeGenerators/FIR_COEFF_1.MEM"/>
-          <Attr Name="ImportTime" Val="1484066594"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../codeGenerators/FIR_COEFF_01.MEM"/>
+          <Attr Name="ImportTime" Val="1484080650"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
@@ -848,6 +848,13 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sim_1/new/RAM_test.sv">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sim_1/new/string_test.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>

@@ -21,6 +21,8 @@
 
 
 module fir_unit #(
+    parameter MEM_ID_0 = 0,
+    parameter MEM_ID_1 = 0,
     parameter MEM_INIT_FILE = "FIR_COEFF_0.MEM",
     parameter TNN   = 16,   // Total number of samples
     parameter DW    = 32,     // Data bitwidth
@@ -121,7 +123,7 @@ xpm_memory_spram # (
 // End of xpm_memory_spram instance declaration
 
 
-
+localparam mem_init = {"FIR_COEFF_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
 // ROM to store coefficients
 // xpm_memory_sprom: Single Port ROM
 // Xilinx Parameterized Macro, Version 2016.4
@@ -130,7 +132,7 @@ xpm_memory_sprom # (
   // Common module parameters
   .MEMORY_SIZE        (ROM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", or "block";
-  .MEMORY_INIT_FILE   (MEM_INIT_FILE),         //string; "none" or "<filename>.mem" 
+  .MEMORY_INIT_FILE   (mem_init),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
   .USE_MEM_INIT       (1),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
