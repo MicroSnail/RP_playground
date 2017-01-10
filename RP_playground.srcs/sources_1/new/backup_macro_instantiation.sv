@@ -1,78 +1,3 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 01/09/2017 03:39:43 PM
-// Design Name: 
-// Module Name: fir_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
-module fir_unit #(
-    parameter MEM_INIT_FILE = "FIR_COEFF_0.MEM",
-    parameter TNN   = 16,   // Total number of samples
-    parameter DW    = 32,     // Data bitwidth
-    parameter NMAC  = 1,      // Number of Multiply accumulator
-    parameter ADC_DW = 14,     // ADC bitwidth (14-bit for the board we are using)
-    parameter ROM_LATENCY = 1,  
-    parameter MAC_LATENCY = 2,
-    parameter ND     = TNN >> $clog2(NMAC),     // Number of Data per MAC
-    parameter BUF_AW = $clog2(TNN),     // Address bitwidth for circular buffer
-    parameter ROM_AW = $clog2(ND),     // Address bitwidth (For ROM and MAC)
-    parameter BUF_RAM_AW = $clog2(ND)
-  )
-( 
-  input                           clk,
-  input                           smpl_buf_wen,
-
-  input [ROM_AW - 1 : 0]          rom_addr,
-  input [BUF_RAM_AW - 1 : 0]      smpl_buf_addr,
-  input [ADC_DW - 1 : 0]          smpl_buf_din,
-  output  [ADC_DW - 1 : 0]        smpl_buf_dout, 
-  output  [48-1 : 0]              mac_out,
-  input                           mac_ce,
-  input                           mac_clear,
-  output  [ADC_DW - 1 : 0]        earliest_sample_out,
-  input                           update_earliest_buffer
-
-    );
-
-
-localparam ROM_SIZE     = ND * DW;        // Total number of bits of a single ROM
-localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer for a single MAC
-
-wire  [DW - 1 : 0]        coe_out;
-// wire [ADC_DW - 1 : 0] smpl_buf_dout;
-
-reg   [ADC_DW - 1 : 0]    earliest_sample = 0;
-assign earliest_sample_out = earliest_sample;
-reg update_earliest_buffer_trig = 0;
-
-// NOTE: See the discussion in One Note, search for "[NOTE:FIR_UNIT_0]"
-//        the trigger is used for aligning for the latency
-always @(posedge clk) begin 
-  if (update_earliest_buffer) begin 
-    update_earliest_buffer_trig <= 1;
-  end
-
-  if (update_earliest_buffer_trig) begin
-    earliest_sample <= smpl_buf_dout;
-    update_earliest_buffer_trig <= 0;    
-  end
-end
-
 // RAM for storing samples
 // xpm_memory_spram: Single Port RAM
 // Xilinx Parameterized Macro, Version 2016.4
@@ -108,12 +33,12 @@ xpm_memory_spram # (
   .rsta           (1'b0),
   .ena            (1'b1),
   .regcea         (1'b1),
-  .wea            (smpl_buf_wen),
+  .wea            (smple_buf_wen),
   .addra          (smpl_buf_addr),
-  .dina           (smpl_buf_din),
+  .dina           (smpl_buf_00_din),
   .injectsbiterra (1'b0),
   .injectdbiterra (1'b0),
-  .douta          (smpl_buf_dout),
+  .douta          (smpl_buf_00_dout),
   .sbiterra       (),
   .dbiterra       ()
 );
@@ -130,7 +55,7 @@ xpm_memory_sprom # (
   // Common module parameters
   .MEMORY_SIZE        (ROM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", or "block";
-  .MEMORY_INIT_FILE   (MEM_INIT_FILE),         //string; "none" or "<filename>.mem" 
+  .MEMORY_INIT_FILE   ("FIR_COEFF_0.MEM"),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
   .USE_MEM_INIT       (1),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
@@ -157,7 +82,7 @@ xpm_memory_sprom # (
   .addra          (rom_addr),
   .injectsbiterra (1'b0),  //do not change
   .injectdbiterra (1'b0),  //do not change
-  .douta          (coe_out),
+  .douta          (coe_00),
   .sbiterra       (),      //do not change
   .dbiterra       ()       //do not change
 );
@@ -173,10 +98,10 @@ MACC_MACRO #(
    .WIDTH_B(14),       // Multiplier B-input bus width, 1-18
    .WIDTH_P(48)        // Accumulator output bus width, 1-48
 ) MACC_MACRO_inst (
-   .P(mac_out),     // MACC output bus, width determined by WIDTH_P parameter 
-   .A(coe_out[23:0]),     // MACC input A bus, width determined by WIDTH_A parameter 
+   .P(mac_00_out),     // MACC output bus, width determined by WIDTH_P parameter 
+   .A(coe_00[23:0]),     // MACC input A bus, width determined by WIDTH_A parameter 
    .ADDSUB(1'b1), // 1-bit add/sub input, high selects add, low selects subtract
-   .B(smpl_buf_dout),     // MACC input B bus, width determined by WIDTH_B parameter 
+   .B(smpl_buf_00_dout),     // MACC input B bus, width determined by WIDTH_B parameter 
    .CARRYIN(1'b0), // 1-bit carry-in input to accumulator
    .CE(mac_ce),     // 1-bit active high input clock enable
    .CLK(clk),   // 1-bit positive edge clock input
@@ -184,6 +109,3 @@ MACC_MACRO #(
    .LOAD_DATA(48'b0), // Load accumulator input data, width determined by WIDTH_P parameter
    .RST(mac_clear)    // 1-bit input active high reset
 );
-
-
-endmodule

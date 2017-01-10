@@ -22,9 +22,9 @@
 
 module FIR_filter_v2
   #(
-    parameter TNN   = 512,   // Total number of samples
+    parameter TNN   = 32,   // Total number of samples
     parameter DW    = 32,     // Data bitwidth
-    parameter NMAC  = 1,      // Number of Multiply accumulator
+    parameter NMAC  = 2,      // Number of Multiply accumulator
     parameter ADC_DW = 14     // ADC bitwidth (14-bit for the board we are using)
   )
   (
@@ -116,14 +116,27 @@ wire [ADC_DW - 1 : 0] smpl_buf_00_din;
 wire [ADC_DW - 1 : 0] smpl_buf_01_din;
 wire [ADC_DW - 1 : 0] smpl_buf_00_dout;
 
-assign smpl_buf_00_din = sample_in;
-assign smpl_buf_01_din = smpl_buf_00_dout;
-assign smpl_buf_addr = smpl_buf_wen ? earliest_addr : mac_addr;
 
 wire smpl_buf_wen;
 reg  smpl_buf_wen_sampler = 0;
 reg  smpl_buf_wen_2 = 1;
 assign smpl_buf_wen = smpl_buf_wen_2 ^ smpl_buf_wen_sampler;
+
+assign smpl_buf_00_din = sample_in;
+assign smpl_buf_01_din = smpl_buf_00_dout;
+assign smpl_buf_addr = smpl_buf_wen ? earliest_addr : mac_addr;
+
+
+
+// a counter add latencies to the start of addr advancements
+reg [2:0] addr_delay = 0; 
+reg mac_addr_en = 1;
+reg rom_addr_en = 1;
+
+reg [ROM_AW : 0] addr_counted = 0;
+
+wire [BUF_AW - 1 : 0] rel_buf_addr;
+assign rel_buf_addr = mac_addr - earliest_addr;
 
 // Controls the signaling for a new sample and the need for a new sample
 always @(posedge clk) begin
@@ -143,7 +156,7 @@ always @(posedge clk) begin
         begin // FIR finishes computation, now we need a new sample_in
           sample_obtained_1 <= ~sample_obtained_1;
           smpl_buf_wen_sampler <= ~smpl_buf_wen_sampler;          
-          output_buffer   <= stage1_sum;
+          output_buffer   <= mac_00_out;
           mac_clear       <= 1'b1;
           sampler_en      <= 1'b0;
           sampler_delay   <= 0;
@@ -177,30 +190,15 @@ always @(posedge clk) begin
 end 
 
 
-// a counter add latencies to the start of addr advancements
-reg [2:0] addr_delay = 0; 
-reg mac_addr_en = 1;
-reg rom_addr_en = 1;
 
-reg [ROM_AW : 0] addr_counted = 0;
-
-wire [BUF_AW - 1 : 0] rel_buf_addr;
-assign rel_buf_addr = mac_addr - earliest_addr;
 
 // reg [1:0] mac_ce_delay = 0;
 // localparam MAC_CE_LATENCY = 1;
+wire is_earliest_addr;
+assign is_earliest_addr = (addr_counted==ND);
+
 
 always @(posedge clk) begin
-
-
-  // if (rom_addr_en) begin
-  //   rom_addr <= rom_addr + 1;
-
-  // end else begin  // This is to accommodate the latency of MAC
-  //   rom_addr <= 0;
-  //   if (addr_delay >= MAC_LATENCY) rom_addr_en <= 1;
-  // end
-
 
   if (mac_addr_en) begin
     if (mac_ce) begin
@@ -223,168 +221,147 @@ always @(posedge clk) begin
     rom_addr <= 0;
     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
   end
-
-
 end
 
-// reg [1:0] mac_ce_delay = 0;
-// localparam MAC_CE_LATENCY = 1;
-
-// always @(posedge clk) begin
 
 
-//   // if (rom_addr_en) begin
-//   //   rom_addr <= rom_addr + 1;
+// // RAM for storing samples
+// // xpm_memory_spram: Single Port RAM
+// // Xilinx Parameterized Macro, Version 2016.4
+// xpm_memory_spram # (
 
-//   // end else begin  // This is to accommodate the latency of MAC
-//   //   rom_addr <= 0;
-//   //   if (addr_delay >= MAC_LATENCY) rom_addr_en <= 1;
-//   // end
-//   if (sample_obtained) begin
-//       mac_ce <= 1;
-//   end 
+//   // Common module parameters
+//   .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
+//   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
+//   .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
+//   .MEMORY_INIT_PARAM  (""    ),         //string;
+//   .USE_MEM_INIT       (0),              //integer; 0,1
+//   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
+//   .MESSAGE_CONTROL    (0),              //integer; 0,1
 
-//   if (mac_addr_en) begin
-//     if (mac_ce) begin
-//       mac_addr <= mac_addr + 1;
-//       rom_addr <= rom_addr + 1;
+//   // Port A module parameters
+//   .WRITE_DATA_WIDTH_A (ADC_DW),             //positive integer
+//   .READ_DATA_WIDTH_A  (ADC_DW),             //positive integer
+//   .BYTE_WRITE_WIDTH_A (ADC_DW),             //integer; 8, 9, or WRITE_DATA_WIDTH_A value
+//   .ADDR_WIDTH_A       (BUF_RAM_AW),              //positive integer
+//   .READ_RESET_VALUE_A ("0"),            //string
+//   .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
+//   .AUTO_SLEEP_TIME    (0),              //Do not Change
+//   .READ_LATENCY_A     (1),              //non-negative integer
+//   .WRITE_MODE_A       ("no_change")    //string; "write_first", "read_first", "no_change" 
 
-//       addr_counted <= addr_counted + 1;
-//     end
+// ) spram_00 (
 
-//     if (addr_counted >= ND + MAC_LATENCY - 1) begin
-//       addr_counted <= 0;
-//       mac_ce <= 0;
-//       sample_expired_mac <= ~sample_expired_mac;
-//       mac_addr_en <= 0;
-//       rom_addr_en <= 0;
-//       addr_delay <= 0;
-//     end
-//   end else begin  // This is to accommodate the latencies of MAC and sample RAM
-//     addr_delay <= addr_delay + 1;
-//     rom_addr <= 0;
-//     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
-//   end
+//   // Common module ports
+//   .sleep          (1'b0),
 
-// end
+//   // Port A module ports
+//   .clka           (clk),
+//   .rsta           (1'b0),
+//   .ena            (1'b1),
+//   .regcea         (1'b1),
+//   .wea            (smpl_buf_wen),
+//   .addra          (smpl_buf_addr),
+//   .dina           (smpl_buf_00_din),
+//   .injectsbiterra (1'b0),
+//   .injectdbiterra (1'b0),
+//   .douta          (smpl_buf_00_dout),
+//   .sbiterra       (),
+//   .dbiterra       ()
+// );
 
-wire [48-1 : 0] mac_00_out;
-
-// RAM for storing samples
-// xpm_memory_spram: Single Port RAM
-// Xilinx Parameterized Macro, Version 2016.4
-xpm_memory_spram # (
-
-  // Common module parameters
-  .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
-  .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
-  .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
-  .MEMORY_INIT_PARAM  (""    ),         //string;
-  .USE_MEM_INIT       (0),              //integer; 0,1
-  .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
-  .MESSAGE_CONTROL    (0),              //integer; 0,1
-
-  // Port A module parameters
-  .WRITE_DATA_WIDTH_A (ADC_DW),             //positive integer
-  .READ_DATA_WIDTH_A  (ADC_DW),             //positive integer
-  .BYTE_WRITE_WIDTH_A (ADC_DW),             //integer; 8, 9, or WRITE_DATA_WIDTH_A value
-  .ADDR_WIDTH_A       (BUF_RAM_AW),              //positive integer
-  .READ_RESET_VALUE_A ("0"),            //string
-  .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
-  .AUTO_SLEEP_TIME    (0),              //Do not Change
-  .READ_LATENCY_A     (1),              //non-negative integer
-  .WRITE_MODE_A       ("no_change")    //string; "write_first", "read_first", "no_change" 
-
-) spram_00 (
-
-  // Common module ports
-  .sleep          (1'b0),
-
-  // Port A module ports
-  .clka           (clk),
-  .rsta           (1'b0),
-  .ena            (1'b1),
-  .regcea         (1'b1),
-  .wea            (smple_buf_wen),
-  .addra          (smpl_buf_addr),
-  .dina           (smpl_buf_00_din),
-  .injectsbiterra (1'b0),
-  .injectdbiterra (1'b0),
-  .douta          (smpl_buf_00_dout),
-  .sbiterra       (),
-  .dbiterra       ()
-);
-
-// End of xpm_memory_spram instance declaration
+// // End of xpm_memory_spram instance declaration
 
 
 
-// ROM to store coefficients
-// xpm_memory_sprom: Single Port ROM
-// Xilinx Parameterized Macro, Version 2016.4
-xpm_memory_sprom # (
+// // ROM to store coefficients
+// // xpm_memory_sprom: Single Port ROM
+// // Xilinx Parameterized Macro, Version 2016.4
+// xpm_memory_sprom # (
 
-  // Common module parameters
-  .MEMORY_SIZE        (ROM_SIZE),           //positive integer
-  .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", or "block";
-  .MEMORY_INIT_FILE   ("FIR_COEFF_0.MEM"),         //string; "none" or "<filename>.mem" 
-  .MEMORY_INIT_PARAM  (""    ),         //string;
-  .USE_MEM_INIT       (1),              //integer; 0,1
-  .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
-  .MESSAGE_CONTROL    (0),              //integer; 0,1
-  .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
-  .AUTO_SLEEP_TIME    (0),              //Do not Change
+//   // Common module parameters
+//   .MEMORY_SIZE        (ROM_SIZE),           //positive integer
+//   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", or "block";
+//   .MEMORY_INIT_FILE   ("FIR_COEFF_0.MEM"),         //string; "none" or "<filename>.mem" 
+//   .MEMORY_INIT_PARAM  (""    ),         //string;
+//   .USE_MEM_INIT       (1),              //integer; 0,1
+//   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
+//   .MESSAGE_CONTROL    (0),              //integer; 0,1
+//   .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
+//   .AUTO_SLEEP_TIME    (0),              //Do not Change
 
-  // Port A module parameters
-  .READ_DATA_WIDTH_A  (DW),             //positive integer
-  .ADDR_WIDTH_A       (ROM_AW),              //positive integer
-  .READ_RESET_VALUE_A ("0"),            //string
-  .READ_LATENCY_A     (ROM_LATENCY)               //non-negative integer
+//   // Port A module parameters
+//   .READ_DATA_WIDTH_A  (DW),             //positive integer
+//   .ADDR_WIDTH_A       (ROM_AW),              //positive integer
+//   .READ_RESET_VALUE_A ("0"),            //string
+//   .READ_LATENCY_A     (ROM_LATENCY)               //non-negative integer
 
-) ROM_00 (
+// ) ROM_00 (
 
-  // Common module ports
-  .sleep          (1'b0),
+//   // Common module ports
+//   .sleep          (1'b0),
 
-  // Port A module ports
-  .clka           (clk),
-  .rsta           (1'b0),
-  .ena            (1'b1),
-  .regcea         (1'b1),
-  .addra          (rom_addr),
-  .injectsbiterra (1'b0),  //do not change
-  .injectdbiterra (1'b0),  //do not change
-  .douta          (coe_00),
-  .sbiterra       (),      //do not change
-  .dbiterra       ()       //do not change
-);
-
-// End of xpm_memory_sprom instance declaration
+//   // Port A module ports
+//   .clka           (clk),
+//   .rsta           (1'b0),
+//   .ena            (1'b1),
+//   .regcea         (1'b1),
+//   .addra          (rom_addr),
+//   .injectsbiterra (1'b0),  //do not change
+//   .injectdbiterra (1'b0),  //do not change
+//   .douta          (coe_00),
+//   .sbiterra       (),      //do not change
+//   .dbiterra       ()       //do not change
+// );
 
 
-// Multiply accumulator
-MACC_MACRO #(
-   .DEVICE("7SERIES"), // Target Device: "7SERIES" 
-   .LATENCY(MAC_LATENCY),        // Desired clock cycle latency, 1-4
-   .WIDTH_A(24),       // Multiplier A-input bus width, 1-25
-   .WIDTH_B(14),       // Multiplier B-input bus width, 1-18
-   .WIDTH_P(48)        // Accumulator output bus width, 1-48
-) MACC_MACRO_inst (
-   .P(mac_00_out),     // MACC output bus, width determined by WIDTH_P parameter 
-   .A(coe_00[23:0]),     // MACC input A bus, width determined by WIDTH_A parameter 
-   .ADDSUB(1'b1), // 1-bit add/sub input, high selects add, low selects subtract
-   .B(smpl_buf_00_dout),     // MACC input B bus, width determined by WIDTH_B parameter 
-   .CARRYIN(1'b0), // 1-bit carry-in input to accumulator
-   .CE(mac_ce),     // 1-bit active high input clock enable
-   .CLK(clk),   // 1-bit positive edge clock input
-   .LOAD(1'b0), // 1-bit active high input load accumulator enable
-   .LOAD_DATA(48'b0), // Load accumulator input data, width determined by WIDTH_P parameter
-   .RST(mac_clear)    // 1-bit input active high reset
-);
+// // Multiply accumulator
+// MACC_MACRO #(
+//    .DEVICE("7SERIES"), // Target Device: "7SERIES" 
+//    .LATENCY(MAC_LATENCY),        // Desired clock cycle latency, 1-4
+//    .WIDTH_A(24),       // Multiplier A-input bus width, 1-25
+//    .WIDTH_B(14),       // Multiplier B-input bus width, 1-18
+//    .WIDTH_P(48)        // Accumulator output bus width, 1-48
+// ) MACC_MACRO_inst (
+//    .P(mac_00_out),     // MACC output bus, width determined by WIDTH_P parameter 
+//    .A(coe_00[23:0]),     // MACC input A bus, width determined by WIDTH_A parameter 
+//    .ADDSUB(1'b1), // 1-bit add/sub input, high selects add, low selects subtract
+//    .B(smpl_buf_00_dout),     // MACC input B bus, width determined by WIDTH_B parameter 
+//    .CARRYIN(1'b0), // 1-bit carry-in input to accumulator
+//    .CE(mac_ce),     // 1-bit active high input clock enable
+//    .CLK(clk),   // 1-bit positive edge clock input
+//    .LOAD(1'b0), // 1-bit active high input load accumulator enable
+//    .LOAD_DATA(48'b0), // Load accumulator input data, width determined by WIDTH_P parameter
+//    .RST(mac_clear)    // 1-bit input active high reset
+// );
 
 
 // Log2 logic to sum MAC outputs 
 
+wire [ADC_DW - 1 : 0] earliest_sample_00_out;
+
+
+// Contains a MAC, a ROM (coefficients), and sample RAM
+fir_unit #(
+    .MEM_INIT_FILE    ( "FIR_COEFF_0.MEM"   ), // String, memory file
+    .TNN              ( TNN                 ), // Total number of samples
+    .DW               ( DW                  ), // Data bitwidth
+    .NMAC             ( NMAC                ), // Number of Multiply accumulator
+    .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
+    .ROM_LATENCY      ( ROM_LATENCY         ),  
+    .MAC_LATENCY      ( MAC_LATENCY         )
+      ) unit_00 (
+    .clk            ( clk                   ),
+    .smpl_buf_wen   ( smpl_buf_wen          ),
+    .rom_addr       ( rom_addr              ),
+    .smpl_buf_addr  ( smpl_buf_addr         ),
+    .smpl_buf_din   ( smpl_buf_00_din       ),
+    .mac_out        ( mac_00_out            ),
+    .mac_ce         ( mac_ce                ),
+    .mac_clear      ( mac_clear             ),
+    .earliest_sample_out    ( earliest_sample_00_out ),
+    .update_earliest_buffer ( is_earliest_addr       )
+  );
 
 
 //  System bus connection
