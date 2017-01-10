@@ -281,9 +281,9 @@ wire [31:0] fir_result;
 //     );
 
 FIR_filter_v2 #(
-    .TNN(1024),   // Total number of samples
+    .TNN(8192),   // Total number of samples
     .DW(32),     // Data bitwidth
-    .NMAC(2),      // Number of Multiply accumulator
+    .NMAC(60),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test

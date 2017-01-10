@@ -35,11 +35,18 @@ always @(posedge clk) begin
   sample <= sample + 1;
 end
 
+// initial begin 
+//   for (int i = 0; i < 64; i++) begin
+//     $display("$clog2(%0d)=%0d", i, $clog2(i));
+//   end
+// end
+
+
 
 FIR_filter_v2 #(
-    .TNN(1024),   // Total number of samples
+    .TNN(2048),   // Total number of samples
     .DW(32),     // Data bitwidth
-    .NMAC(2),      // Number of Multiply accumulator
+    .NMAC(64),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_inst

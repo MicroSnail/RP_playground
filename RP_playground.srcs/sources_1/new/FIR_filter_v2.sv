@@ -22,9 +22,9 @@
 
 module FIR_filter_v2
   #(
-    parameter TNN   = 32,   // Total number of samples
+    parameter TNN   = 128,   // Total number of samples
     parameter DW    = 32,     // Data bitwidth
-    parameter NMAC  = 2,      // Number of Multiply accumulator
+    parameter NMAC  = 8,      // Number of Multiply accumulator
     parameter ADC_DW = 14     // ADC bitwidth (14-bit for the board we are using)
   )
   (
@@ -55,7 +55,7 @@ localparam ROM_LATENCY = 1;           // Must be 1 or higher to infer BRAM, see 
 localparam MAC_LATENCY = 2;           
 
 localparam DSP_OUT_DW = 48;
-localparam N_SUM_STAGE = NMAC >> 1;
+localparam N_SUM_STAGE = $clog2(NMAC) - 1; // minus 1 because we summed once at the time MAC is done
 
 // Local registers and bus declaration
 reg   [ROM_AW - 1 : 0]    rom_addr = 0;
@@ -91,47 +91,32 @@ assign sample_expired = sample_expired_mac ^ sample_expired_sampler;
 reg [47:0] output_buffer = 0;
 assign result = output_buffer;
 
-reg [(NMAC >> 1)-1 : 0][DSP_OUT_DW - 1 : 0] partial_mac;
+reg [DSP_OUT_DW - 1 : 0] partial_mac [0 : (NMAC >> 1)-1];
 
 // Signals to activate MAC and clear MAC
 reg mac_clear = 0;
 reg [BUF_AW - 1 : 0] mac_addr = 0;
 reg mac_ce = 0;
 
-
 reg sampler_en = 1'b1;
-
 reg [2:0] sampler_delay = 0;
 
 // For sample_in RAM
-// reg [BUF_AW - 1 : 0]  smpl_buf_addr = 0;
 wire [BUF_RAM_AW - 1 : 0]  smpl_buf_addr;
 
 // FIR unit specific in/out's
-// wire [ADC_DW - 1 : 0] smpl_buf_00_din;
-// wire [ADC_DW - 1 : 0] smpl_buf_01_din;
-
-// wire [ADC_DW - 1 : 0] earliest_sample_00_out;
-// wire [ADC_DW - 1 : 0] earliest_sample_01_out;
-
-// wire [48-1 : 0] mac_00_out;
-// wire [48-1 : 0] mac_01_out;
-
-
-
-// FIR unit sample RAM earlieast --> latest sample passing
-// assign smpl_buf_00_din = earliest_sample_01_out;
-// assign smpl_buf_01_din = sample_in;
-
-// Try array instantiation
 wire [ADC_DW - 1 : 0] smpl_buf_din[0 : NMAC - 1];
 wire [ADC_DW - 1 : 0] earliest_sample_out[0 : NMAC - 1];
 wire [48-1 : 0] mac_out[0 : NMAC - 1];
 
 wire [DW-1 : 0] stage1_sum_00;
+wire [DW-1 : 0] stage_0_partial_mac [0 : (NMAC>>1) - 1];
 assign stage1_sum_00 = mac_out[0] + mac_out[1];
 
 
+// Connecting RAMs such that the earliest sample of the N-th RAM
+// becomes the latest sample of the (N-1)th RAM;
+// And the last RAM takes new sample as the latest sample
 genvar i;
 generate
   for (i = 0; i < NMAC-1; i++) begin
@@ -158,7 +143,7 @@ reg [ROM_AW : 0] addr_counted = 0;
 wire [BUF_AW - 1 : 0] rel_buf_addr;
 assign rel_buf_addr = mac_addr - earliest_addr;
 
-// Signal for fir_units to update their earlieast sample output buffer
+// Signal for fir_units to update their earliest sample output buffer
 wire is_earliest_addr;
 assign is_earliest_addr = (addr_counted==ND);
 
@@ -169,8 +154,11 @@ reg sum_ce_2 = 0;
 assign sum_ce = sum_ce_1 ^ sum_ce_2;
 
 
+reg [$clog2(N_SUM_STAGE) : 0] i_stage = 0; 
+reg sum_done = 0;
 
 // Controls the signaling for a new sample and the need for a new sample
+// genvar j;
 always @(posedge clk) begin
   if (sampler_en) begin
     case({sample_expired, sample_obtained}) 
@@ -184,7 +172,13 @@ always @(posedge clk) begin
         // FIR finishes computation, now we need a new sample_in
           sample_obtained_1 <= ~sample_obtained_1;
           smpl_buf_wen_1 <= ~smpl_buf_wen_1;          
-          output_buffer   <= stage1_sum_00;
+          // output_buffer   <= stage1_sum_00;
+          // output_buffer   <= partial_mac[0];
+
+          // Make use of the output immediately and sum them in pairs.
+          for (int j = 0; j < (NMAC >> 1); j++) begin: partial_mac_buffer
+            partial_mac[j] <= mac_out[2*j] + mac_out[2*j + 1];
+          end
         
         // In the meantime, clear the MAC
           mac_clear       <= 1'b1;
@@ -240,58 +234,45 @@ always @(posedge clk) begin
     rom_addr <= 0;
     if (addr_delay >= MAC_LATENCY - ROM_LATENCY) mac_addr_en <= 1;
   end  
+
+// Logic for summation of partial MACs
+
+  if(sum_ce) begin
+    sum_done <= 1'b0;
+    i_stage <= i_stage + 1;
+
+    for (int i = 0; i < N_SUM_STAGE; i++) begin
+      if(i_stage == i) begin 
+        $display("stage %0d", i_stage);
+        if(i_stage == N_SUM_STAGE-1) begin
+          sum_ce_2 <= ~sum_ce_2;
+          sum_done <= 1'b1;
+          i_stage <= 0;
+        end           
+
+        for (int j = 0; j < (NMAC >> 2) >> i_stage; j++) begin
+          partial_mac[j*(1<<(i+1))] <= partial_mac[j*(1<<(i+1))] + partial_mac[j*(1<<(i+1)) + (1 << i)];
+          $display("Doing this");
+          $display("partial_mac[%0d] <= partial_mac[%0d] + partial_mac[%0d]",j*(1<<(i+1)), j*(1<<(i+1)), j*(1<<(i+1)) + (1 << i));
+        end
+
+      end
+    end
+  end
+
+  if (sum_done) begin
+    output_buffer <= partial_mac[0];
+  end
+
+
 end 
 
-// Each unit contains a MAC, a ROM (fixed coefficients), and sample RAM
-// fir_unit #(
-//     .MEM_ID_1           (048),      // Use ASCII code for single digits!! D[1] D[0]
-//     .MEM_ID_0           (048),      // For example, for 13, enter ID1=049, ID0=051
-//     // .MEM_INIT_FILE    ( "FIR_COEFF_0.MEM"   ), // String, memory file
-//     .TNN              ( TNN                 ), // Total number of samples
-//     .DW               ( DW                  ), // Data bitwidth
-//     .NMAC             ( NMAC                ), // Number of Multiply accumulator
-//     .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
-//     .ROM_LATENCY      ( ROM_LATENCY         ),  
-//     .MAC_LATENCY      ( MAC_LATENCY         )
-//       ) unit_00 (
-//     .clk            ( clk                   ),
-//     .smpl_buf_wen   ( smpl_buf_wen          ),
-//     .rom_addr       ( rom_addr              ),
-//     .smpl_buf_addr  ( smpl_buf_addr         ),
-//     .smpl_buf_din   ( smpl_buf_00_din       ),
-//     .mac_out        ( mac_00_out            ),
-//     .mac_ce         ( mac_ce                ),
-//     .mac_clear      ( mac_clear             ),
-//     .earliest_sample_out    ( earliest_sample_00_out ),
-//     .update_earliest_buffer ( is_earliest_addr       )
-//   );
 
-// Contains a MAC, a ROM (coefficients), and sample RAM
-// fir_unit #(
-//     .MEM_ID_1           (048),      // Use ASCII code for single digits!! D[1] D[0]
-//     .MEM_ID_0           (049),      // For example, for 13, enter ID1=049, ID0=051
-//     // .MEM_INIT_FILE    ( "FIR_COEFF_1.MEM"   ), // String, memory file
-//     .TNN              ( TNN                 ), // Total number of samples
-//     .DW               ( DW                  ), // Data bitwidth
-//     .NMAC             ( NMAC                ), // Number of Multiply accumulator
-//     .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
-//     .ROM_LATENCY      ( ROM_LATENCY         ),  
-//     .MAC_LATENCY      ( MAC_LATENCY         )
-//       ) unit_01 (
-//     .clk            ( clk                   ),
-//     .smpl_buf_wen   ( smpl_buf_wen          ),
-//     .rom_addr       ( rom_addr              ),
-//     .smpl_buf_addr  ( smpl_buf_addr         ),
-//     .smpl_buf_din   ( smpl_buf_01_din       ),
-//     .mac_out        ( mac_01_out            ),
-//     .mac_ce         ( mac_ce                ),
-//     .mac_clear      ( mac_clear             ),
-//     .earliest_sample_out    ( earliest_sample_01_out ),
-//     .update_earliest_buffer ( is_earliest_addr       )
-//   );
 
+
+// Instantiate partial FIR modules, each responsible for integrating a chunk of the kernel
 generate
-  for (i = 0; i < NMAC; i++) begin
+  for (i = 0; i < NMAC; i++) begin : partial_fir
     fir_unit #(
       .MEM_ID_1           (i / 10 + 48),      // Use ASCII code for single digits!! D[1] D[0]
       .MEM_ID_0           (i % 10 + 48),      // For example, for 13, enter ID1=049, ID0=051      
@@ -314,15 +295,7 @@ generate
       .update_earliest_buffer ( is_earliest_addr        )
     );
   end
-
 endgenerate
-
-
-
-
-
-// Logic for summation of partial MACs
-
 
 //  System bus connection
 
