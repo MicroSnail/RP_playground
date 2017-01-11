@@ -32,6 +32,7 @@ module FIR_filter_v2
     input [ADC_DW - 1: 0] sample_in          ,
     input                 clk             ,  // Input clock
     output [DW -1 : 0]    result          ,
+    output reg            output_refrehsed, 
 
     // system bus (for debugging?)
     input      [ 32-1: 0] sys_addr        ,  // bus address
@@ -262,7 +263,11 @@ always @(posedge clk) begin
 
   if (sum_done) begin
     output_buffer <= partial_mac[0];
+    output_refrehsed <= 1'b1;
   end
+
+  if (output_refrehsed)
+    output_refrehsed <= 1'b0;
 
 
 end 
