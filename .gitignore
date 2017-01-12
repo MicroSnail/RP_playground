@@ -6,6 +6,8 @@ RP_playground.runs
 RP_playground.sim
 RP_playground.sdk
 
+# No MEM memory initiation files
+*.MEM 
 
 # Windows image file caches
 Thumbs.db

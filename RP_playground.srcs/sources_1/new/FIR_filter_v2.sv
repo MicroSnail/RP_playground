@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: 
+// Engineer: Jialun Luo
 // 
 // Create Date: 01/07/2017 11:02:15 AM
 // Design Name: 
@@ -92,7 +92,7 @@ assign sample_expired = sample_expired_mac ^ sample_expired_sampler;
 reg [47:0] output_buffer = 0;
 assign result = output_buffer;
 
-reg [DSP_OUT_DW - 1 : 0] partial_mac [0 : (NMAC >> 1)-1];
+reg signed [DSP_OUT_DW - 1 : 0] partial_mac [0 : (NMAC >> 1)-1] = '{default: {DSP_OUT_DW{1'b0}}};
 
 // Signals to activate MAC and clear MAC
 reg mac_clear = 0;
@@ -106,13 +106,9 @@ reg [2:0] sampler_delay = 0;
 wire [BUF_RAM_AW - 1 : 0]  smpl_buf_addr;
 
 // FIR unit specific in/out's
-wire [ADC_DW - 1 : 0] smpl_buf_din[0 : NMAC - 1];
-wire [ADC_DW - 1 : 0] earliest_sample_out[0 : NMAC - 1];
-wire [48-1 : 0] mac_out[0 : NMAC - 1];
-
-wire [DW-1 : 0] stage1_sum_00;
-wire [DW-1 : 0] stage_0_partial_mac [0 : (NMAC>>1) - 1];
-assign stage1_sum_00 = mac_out[0] + mac_out[1];
+wire signed [ADC_DW - 1 : 0] smpl_buf_din[0 : NMAC - 1];
+wire signed [ADC_DW - 1 : 0] earliest_sample_out[0 : NMAC - 1];
+wire signed [48-1 : 0] mac_out[0 : NMAC - 1];
 
 
 // Connecting RAMs such that the earliest sample of the N-th RAM
@@ -125,6 +121,9 @@ generate
   end
 
   assign smpl_buf_din[NMAC-1] = sample_in;
+
+  //This is only for debugging and use my predefined numbers in a loop
+  // assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
 endgenerate
 
 // FIR unit shared signals
@@ -158,6 +157,8 @@ assign sum_ce = sum_ce_1 ^ sum_ce_2;
 reg [$clog2(N_SUM_STAGE) : 0] i_stage = 0; 
 reg sum_done = 0;
 
+reg output_refrehsed_once = 1'b0; 
+
 // Controls the signaling for a new sample and the need for a new sample
 // genvar j;
 always @(posedge clk) begin
@@ -172,14 +173,13 @@ always @(posedge clk) begin
         begin 
         // FIR finishes computation, now we need a new sample_in
           sample_obtained_1 <= ~sample_obtained_1;
-          smpl_buf_wen_1 <= ~smpl_buf_wen_1;          
-          // output_buffer   <= stage1_sum_00;
-          // output_buffer   <= partial_mac[0];
+          smpl_buf_wen_1 <= ~smpl_buf_wen_1;
 
           // Make use of the output immediately and sum them in pairs.
           for (int j = 0; j < (NMAC >> 1); j++) begin: partial_mac_buffer
             partial_mac[j] <= mac_out[2*j] + mac_out[2*j + 1];
           end
+          $display("%0d", partial_mac[0]);
         
         // In the meantime, clear the MAC
           mac_clear       <= 1'b1;
@@ -244,26 +244,27 @@ always @(posedge clk) begin
 
     for (int i = 0; i < N_SUM_STAGE; i++) begin
       if(i_stage == i) begin 
-        $display("stage %0d", i_stage);
+        // $display("stage %0d", i_stage);
         if(i_stage == N_SUM_STAGE-1) begin
           sum_ce_2 <= ~sum_ce_2;
           sum_done <= 1'b1;
           i_stage <= 0;
+          output_refrehsed <= 1'b1;
         end           
 
         for (int j = 0; j < (NMAC >> 2) >> i_stage; j++) begin
           partial_mac[j*(1<<(i+1))] <= partial_mac[j*(1<<(i+1))] + partial_mac[j*(1<<(i+1)) + (1 << i)];
-          $display("Doing this");
-          $display("partial_mac[%0d] <= partial_mac[%0d] + partial_mac[%0d]",j*(1<<(i+1)), j*(1<<(i+1)), j*(1<<(i+1)) + (1 << i));
+          // $display("Doing this");
+          // $display("partial_mac[%0d] <= partial_mac[%0d] + partial_mac[%0d]",j*(1<<(i+1)), j*(1<<(i+1)), j*(1<<(i+1)) + (1 << i));
         end
 
+        // $display("--------------stage %0d done--------------", i_stage);
       end
     end
   end
 
   if (sum_done) begin
     output_buffer <= partial_mac[0];
-    output_refrehsed <= 1'b1;
   end
 
   if (output_refrehsed)
@@ -282,7 +283,7 @@ generate
       .MEM_ID_1           (i / 10 + 48),      // Use ASCII code for single digits!! D[1] D[0]
       .MEM_ID_0           (i % 10 + 48),      // For example, for 13, enter ID1=049, ID0=051      
       .TNN              ( TNN                 ), // Total number of samples
-      .DW               ( DW                  ), // Data bitwidth
+      .DW               ( DW                  ), // Data bitwidth (coefficient obsolete)
       .NMAC             ( NMAC                ), // Number of Multiply accumulator
       .ADC_DW           ( ADC_DW              ), // ADC bitwidth (14-bit for the board we are using)
       .ROM_LATENCY      ( ROM_LATENCY         ),  
@@ -316,8 +317,8 @@ always @(posedge clk) begin
   sys_err <= 1'b0 ;
   sys_ack <= sys_en;
   casez (sys_addr[19:0])
-    20'h0000  : begin sys_rdata <= {{32-ROM_AW{1'b0}}, rom_addr}; end
-    20'h0004  : begin sys_rdata <= {{32-DW{1'b0}}, coe_00}; end
+    20'h0000  : begin sys_rdata <= {{32-ROM_AW{1'b0}},  rom_addr}; end
+    20'h0004  : begin sys_rdata <= {{32-DW{1'b0}},      result}; end
       default : begin sys_rdata <=   32'h0                           ; end
   endcase
 end

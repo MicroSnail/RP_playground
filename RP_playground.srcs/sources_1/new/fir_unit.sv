@@ -1,12 +1,12 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: 
+// Engineer: Jialun Luo (oh... I thought it would be a programmer... :D)
 // 
 // Create Date: 01/09/2017 03:39:43 PM
 // Design Name: 
 // Module Name: fir_unit
-// Project Name: 
+// Project Name: FIR Filter
 // Target Devices: 
 // Tool Versions: 
 // Description: 
@@ -23,9 +23,10 @@
 module fir_unit #(
     parameter MEM_ID_0 = 0,
     parameter MEM_ID_1 = 0,
-    parameter MEM_INIT_FILE = "FIR_COEFF_0.MEM",
+    parameter MEM_INIT_FILE = "FIR_COEFF_00.MEM",
     parameter TNN   = 16,   // Total number of samples
     parameter DW    = 32,     // Data bitwidth
+    parameter ROM_DW=24,
     parameter NMAC  = 1,      // Number of Multiply accumulator
     parameter ADC_DW = 14,     // ADC bitwidth (14-bit for the board we are using)
     parameter ROM_LATENCY = 1,  
@@ -33,7 +34,7 @@ module fir_unit #(
     parameter ND     = TNN >> $clog2(NMAC),     // Number of Data per MAC
     parameter BUF_AW = $clog2(TNN),     // Address bitwidth for circular buffer
     parameter ROM_AW = $clog2(ND),     // Address bitwidth (For ROM and MAC)
-    parameter BUF_RAM_AW = $clog2(ND)
+    parameter BUF_RAM_AW = $clog2(ND)   // RAM address bitwidth
   )
 ( 
   input                           clk,
@@ -41,24 +42,24 @@ module fir_unit #(
 
   input [ROM_AW - 1 : 0]          rom_addr,
   input [BUF_RAM_AW - 1 : 0]      smpl_buf_addr,
-  input [ADC_DW - 1 : 0]          smpl_buf_din,
-  output  [ADC_DW - 1 : 0]        smpl_buf_dout, 
+  input signed [ADC_DW - 1 : 0]   smpl_buf_din,
+  output signed [ADC_DW - 1 : 0]  smpl_buf_dout, 
   output  [48-1 : 0]              mac_out,
   input                           mac_ce,
   input                           mac_clear,
-  output  [ADC_DW - 1 : 0]        earliest_sample_out,
+  output signed [ADC_DW - 1 : 0]  earliest_sample_out,
   input                           update_earliest_buffer
 
     );
 
 
-localparam ROM_SIZE     = ND * DW;        // Total number of bits of a single ROM
+localparam ROM_SIZE     = ND * ROM_DW;        // Total number of bits of a single ROM
 localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer for a single MAC
 
-wire  [DW - 1 : 0]        coe_out;
+wire  [ROM_DW - 1 : 0]        coe_out;
 // wire [ADC_DW - 1 : 0] smpl_buf_dout;
 
-reg   [ADC_DW - 1 : 0]    earliest_sample = 0;
+reg signed  [ADC_DW - 1 : 0]  earliest_sample = 0;
 assign earliest_sample_out = earliest_sample;
 reg update_earliest_buffer_trig = 0;
 
@@ -75,6 +76,11 @@ always @(posedge clk) begin
   end
 end
 
+// Dummy data only for debugging
+// Set .USE_MEM_INIT to 1? (The manual says this doesn't matter so I don't know...)
+// But make sure to use .MEMORY_INIT_FILE if loading a file is needed
+localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
+
 // RAM for storing samples
 // xpm_memory_spram: Single Port RAM
 // Xilinx Parameterized Macro, Version 2016.4
@@ -84,8 +90,9 @@ xpm_memory_spram # (
   .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
   .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
+  .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
-  .USE_MEM_INIT       (0),              //integer; 0,1
+  .USE_MEM_INIT       (1),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
   .MESSAGE_CONTROL    (0),              //integer; 0,1
 
@@ -141,7 +148,7 @@ xpm_memory_sprom # (
   .AUTO_SLEEP_TIME    (0),              //Do not Change
 
   // Port A module parameters
-  .READ_DATA_WIDTH_A  (DW),             //positive integer
+  .READ_DATA_WIDTH_A  (ROM_DW),             //positive integer
   .ADDR_WIDTH_A       (ROM_AW),              //positive integer
   .READ_RESET_VALUE_A ("0"),            //string
   .READ_LATENCY_A     (ROM_LATENCY)               //non-negative integer

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: 
+// Engineer: Jialun Luo
 // 
 // Create Date: 01/03/2017 03:30:39 PM
 // Design Name: 
@@ -192,13 +192,22 @@ assign adc_clk_o = 2'b10;	// generating ADC clock is disabled
 reg  [14-1:0] adc_dat_raw_CH1;
 reg  [14-1:0] adc_dat_raw_CH2;
 
+// These would be in signed (2's complement) format, but use $signed() whenever needed
+reg  [14-1:0] adc_dat_CH1;
+reg  [14-1:0] adc_dat_CH2;
+
 // IO block registers should be used here (JL: ??? what does this mean?)
 // lowest 2 bits reserved for 16bit ADC (JL: we don't really need to worry about this)
 // adc_dat_raw's range from 0-16383, unsigned.
 always @(posedge clk_125)
 begin
+  // unsigned ADC inputs
   adc_dat_raw_CH1 <= adc_dat_i[0][16-1:2];
   adc_dat_raw_CH2 <= adc_dat_i[1][16-1:2];
+
+  // signed ADC inputs: 0-->16383 maps to -8192-->8191
+  adc_dat_CH1 <= {~adc_dat_i[0][16-1], adc_dat_i[0][16-2:2]};
+  adc_dat_CH2 <= {~adc_dat_i[1][16-1], adc_dat_i[1][16-2:2]};
 end
 
 // ADC reset (active low)
@@ -244,14 +253,14 @@ wire [31:0] fir_result;
 //     );
 
 FIR_filter_v2 #(
-    .TNN(8192),   // Total number of samples
+    .TNN(4096),   // Total number of samples
     .DW(32),     // Data bitwidth
     .NMAC(32),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test
   (
-    .sample_in(adc_dat_raw_CH1),
+    .sample_in(adc_dat_CH1),
     .result(fir_result),
     .output_refreshed(led_o_buf[7]),
     .clk(clk_125)// Input clock

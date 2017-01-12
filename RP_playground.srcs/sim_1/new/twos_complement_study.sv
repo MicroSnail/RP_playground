@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: Jialun Luo
 // 
-// Create Date: 01/07/2017 11:19:44 PM
+// Create Date: 01/11/2017 12:39:32 PM
 // Design Name: 
-// Module Name: FIR_filter_v2_TB
+// Module Name: twos_complement_study
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,36 +20,29 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module FIR_filter_v2_TB(
+module twos_complement_study(
 
     );
-
 reg clk = 0;
 always 
 #5 clk <= ~clk;
 
-reg [13:0] sample = 0;
+reg [13:0] sample_raw = 0;
+
 
 
 always @(posedge clk) begin
-  sample <= sample[3:0] + 1;
+  sample_raw <= sample_raw + 1;
+end
+
+wire [13:0] sample;
+assign sample = {~sample_raw[13], sample_raw[12:0]};
+
+always @(posedge clk) begin
+  // sample <= {~sample_raw[13], sample_raw[12:0]};
+  $display("RAW:%014b (%6d), NEW: %014b (%6d)", sample_raw,sample_raw, $signed(sample), $signed(sample));
 end
 
 
-
-
-
-FIR_filter_v2 #(
-    .TNN(64),   // Total number of samples
-    .DW(32),     // Data bitwidth
-    .NMAC(8),      // Number of Multiply accumulator
-    .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
-  )
-  filter_inst
-  (
-    .sample_in(sample),
-    .clk(clk)// Input clock
-
-  );
 
 endmodule
