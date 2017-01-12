@@ -1,10 +1,10 @@
 // Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2016.4 (win64) Build 1733598 Wed Dec 14 22:35:39 MST 2016
-// Date        : Tue Jan 03 22:48:38 2017
+// Date        : Thu Jan 12 16:06:48 2017
 // Host        : EpsilonIJK running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
-//               d:/Users/MicroSnail/Documents/Cornell/Vengalattore/FPGA_PID/RP_playground/RP_playground.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v
+//               D:/Users/MicroSnail/Documents/Cornell/Vengalattore/FPGA_PID/RP_playground/RP_playground.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v
 // Design      : clk_wiz_0
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,53 +14,66 @@
 
 (* NotValidForBitStream *)
 module clk_wiz_0
-   (clk_50,
-    clk_25,
+   (clk_250_n90deg,
+    clk_250,
     clk_125,
+    reset,
+    locked,
     clk_in1);
-  output clk_50;
-  output clk_25;
+  output clk_250_n90deg;
+  output clk_250;
   output clk_125;
+  input reset;
+  output locked;
   input clk_in1;
 
   wire clk_125;
-  wire clk_25;
-  wire clk_50;
+  wire clk_250;
+  wire clk_250_n90deg;
   (* IBUF_LOW_PWR *) wire clk_in1;
+  wire locked;
+  wire reset;
 
   clk_wiz_0_clk_wiz_0_clk_wiz inst
        (.clk_125(clk_125),
-        .clk_25(clk_25),
-        .clk_50(clk_50),
-        .clk_in1(clk_in1));
+        .clk_250(clk_250),
+        .clk_250_n90deg(clk_250_n90deg),
+        .clk_in1(clk_in1),
+        .locked(locked),
+        .reset(reset));
 endmodule
 
 (* ORIG_REF_NAME = "clk_wiz_0_clk_wiz" *) 
 module clk_wiz_0_clk_wiz_0_clk_wiz
-   (clk_50,
-    clk_25,
+   (clk_250_n90deg,
+    clk_250,
     clk_125,
+    reset,
+    locked,
     clk_in1);
-  output clk_50;
-  output clk_25;
+  output clk_250_n90deg;
+  output clk_250;
   output clk_125;
+  input reset;
+  output locked;
   input clk_in1;
 
   wire clk_125;
   wire clk_125_clk_wiz_0;
-  wire clk_25;
-  wire clk_25_clk_wiz_0;
-  wire clk_50;
-  wire clk_50_clk_wiz_0;
+  wire clk_250;
+  wire clk_250_clk_wiz_0;
+  wire clk_250_n90deg;
+  wire clk_250_n90deg_clk_wiz_0;
   wire clk_in1;
   wire clk_in1_clk_wiz_0;
   wire clkfbout_buf_clk_wiz_0;
   wire clkfbout_clk_wiz_0;
+  wire locked;
+  wire reset;
   wire NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED;
   wire NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED;
   wire NLW_plle2_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_plle2_adv_inst_DRDY_UNCONNECTED;
-  wire NLW_plle2_adv_inst_LOCKED_UNCONNECTED;
   wire [15:0]NLW_plle2_adv_inst_DO_UNCONNECTED;
 
   (* BOX_TYPE = "PRIMITIVE" *) 
@@ -78,12 +91,12 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .O(clk_in1_clk_wiz_0));
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkout1_buf
-       (.I(clk_50_clk_wiz_0),
-        .O(clk_50));
+       (.I(clk_250_n90deg_clk_wiz_0),
+        .O(clk_250_n90deg));
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkout2_buf
-       (.I(clk_25_clk_wiz_0),
-        .O(clk_25));
+       (.I(clk_250_clk_wiz_0),
+        .O(clk_250));
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkout3_buf
        (.I(clk_125_clk_wiz_0),
@@ -95,10 +108,10 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
     .CLKFBOUT_PHASE(0.000000),
     .CLKIN1_PERIOD(8.000000),
     .CLKIN2_PERIOD(0.000000),
-    .CLKOUT0_DIVIDE(20),
+    .CLKOUT0_DIVIDE(4),
     .CLKOUT0_DUTY_CYCLE(0.500000),
-    .CLKOUT0_PHASE(0.000000),
-    .CLKOUT1_DIVIDE(40),
+    .CLKOUT0_PHASE(-90.000000),
+    .CLKOUT1_DIVIDE(4),
     .CLKOUT1_DUTY_CYCLE(0.500000),
     .CLKOUT1_PHASE(0.000000),
     .CLKOUT2_DIVIDE(8),
@@ -127,8 +140,8 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .CLKIN1(clk_in1_clk_wiz_0),
         .CLKIN2(1'b0),
         .CLKINSEL(1'b1),
-        .CLKOUT0(clk_50_clk_wiz_0),
-        .CLKOUT1(clk_25_clk_wiz_0),
+        .CLKOUT0(clk_250_n90deg_clk_wiz_0),
+        .CLKOUT1(clk_250_clk_wiz_0),
         .CLKOUT2(clk_125_clk_wiz_0),
         .CLKOUT3(NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED),
         .CLKOUT4(NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED),
@@ -140,9 +153,9 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .DO(NLW_plle2_adv_inst_DO_UNCONNECTED[15:0]),
         .DRDY(NLW_plle2_adv_inst_DRDY_UNCONNECTED),
         .DWE(1'b0),
-        .LOCKED(NLW_plle2_adv_inst_LOCKED_UNCONNECTED),
+        .LOCKED(locked),
         .PWRDWN(1'b0),
-        .RST(1'b0));
+        .RST(reset));
 endmodule
 `ifndef GLBL
 `define GLBL

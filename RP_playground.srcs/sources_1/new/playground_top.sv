@@ -59,11 +59,11 @@ module playground_top#(
   output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
   output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
   // // DAC
-  // output logic [14-1:0] dac_dat_o  ,  // DAC combined data
-  // output logic          dac_wrt_o  ,  // DAC write
-  // output logic          dac_sel_o  ,  // DAC channel select
-  // output logic          dac_clk_o  ,  // DAC clock
-  // output logic          dac_rst_o  ,  // DAC reset
+  output logic [14-1:0] dac_dat_o  ,  // DAC combined data
+  output logic          dac_wrt_o  ,  // DAC write
+  output logic          dac_sel_o  ,  // DAC channel select
+  output logic          dac_clk_o  ,  // DAC clock
+  output logic          dac_rst_o  ,  // DAC reset
   // // PWM DAC
   // output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
   // // XADC
@@ -95,27 +95,34 @@ wire [7:0] led_o_buf;
 IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in)); 
 
 //clocks
-wire pll_clk_50;
-wire pll_clk_25;
+wire pll_clk_250;
+wire pll_clk_250_n90deg;
 wire pll_clk_125;
+wire pll_locked;
  
-clk_wiz_0 inst
+clk_wiz_0 clock_PLL
   (
   // Clock out ports  
-  .clk_50 	(	pll_clk_50	),
-  .clk_25 	(	pll_clk_25	),
+  .clk_250 	(	pll_clk_250	),
+  .clk_250_n90deg 	(	pll_clk_250_n90deg	),
   .clk_125	(	pll_clk_125	),
  // Clock in ports
-  .clk_in1(adc_clk_in)
+  .clk_in1(adc_clk_in),
+  .locked(pll_locked)
   );
 
-wire clk_25;			//	25	MHz
-wire clk_50;			//	50	MHz
+wire clk_250_n90deg;			//	250	MHz 45 deg phase shift
+wire clk_250;			//	50	MHz
 wire clk_125;			//	125	MHz
 
-BUFG bufg_clk_25   	(.O (clk_25   ), .I (pll_clk_25   ));
-BUFG bufg_clk_125   (.O (clk_125  ), .I (pll_clk_125  ));
-BUFG bufg_clk_50   	(.O (clk_50   ), .I (pll_clk_50   ));
+wire adc_clk = clk_125;
+wire dac_clk_1x = clk_125;
+wire dac_clk_2x = clk_250;
+wire dac_clk_2x_n90deg = clk_250_n90deg;
+
+BUFG bufg_clk_250_45deg   	(.O (clk_250_n90deg   ), .I (pll_clk_250_n90deg   ));
+BUFG bufg_clk_125           (.O (clk_125  ), .I (pll_clk_125  ));
+BUFG bufg_clk_250   	      (.O (clk_250   ), .I (pll_clk_250   ));
 //-----------------------------------------------------//
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,17 +191,18 @@ processing_system ps(
 
 
 
-
-// ADC-related 
+//-------------ADC Logics-----------------------------------------------//
 assign adc_cdcs_o = 1'b1;	// Enable the duty cycle stabilizer (copied from rp code)
 assign adc_clk_o = 2'b10;	// generating ADC clock is disabled
+
+reg adc_rstn;
 
 reg  [14-1:0] adc_dat_raw_CH1;
 reg  [14-1:0] adc_dat_raw_CH2;
 
 // These would be in signed (2's complement) format, but use $signed() whenever needed
-reg  [14-1:0] adc_dat_CH1;
-reg  [14-1:0] adc_dat_CH2;
+reg signed [14-1:0] adc_dat_CH1;
+reg signed [14-1:0] adc_dat_CH2;
 
 // IO block registers should be used here (JL: ??? what does this mean?)
 // lowest 2 bits reserved for 16bit ADC (JL: we don't really need to worry about this)
@@ -211,10 +219,37 @@ begin
 end
 
 // ADC reset (active low)
-// always @(posedge adc_clk)
-// adc_rstn <=  frstn[0] &  pll_locked;
+always @(posedge adc_clk) adc_rstn <=  pll_locked;
+//////////////////////////////////////////////////////////////////////////
 
-//----------------------------------------------------------------------//
+//-------------DAC Logics-----------------------------------------------//
+// NOTE: The code handling ODDR macros down there is mostly from here:
+//       https://github.com/pavel-demin/red-pitaya-notes/blob/master/cores/axis_red_pitaya_dac_v1_0/axis_red_pitaya_dac.v 
+reg [14-1 : 0] dac_CH1;
+reg [14-1 : 0] dac_CH2;
+
+reg dac_rst = 0;
+wire [14-1 : 0] dac_test_CH1;
+wire [14-1 : 0] dac_test_CH2;
+
+always @(posedge dac_clk_1x)
+begin
+  dac_CH1 <= {~adc_dat_CH1[13] , adc_dat_CH1[12:0]};
+  dac_CH2 <= dac_test_CH2;
+end
+
+// DDR outputs
+ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_CH1), .D2(dac_CH2), .C(dac_clk_1x      ), .CE(1'b1), .R(1'b0), .S(1'b0));
+ODDR ODDR_rst(.Q(dac_rst_o), .D1(dac_rst), .D2(dac_rst), .C(dac_clk_1x), .CE(1'b1), .R(1'b0), .S(1'b0));
+ODDR ODDR_sel(.Q(dac_sel_o), .D1(1'b0), .D2(1'b1), .C(dac_clk_1x), .CE(1'b1), .R(1'b0), .S(1'b0));
+ODDR ODDR_wrt(.Q(dac_wrt_o), .D1(1'b0), .D2(1'b1), .C(dac_clk_2x_n90deg), .CE(1'b1), .R(1'b0), .S(1'b0));
+ODDR ODDR_clk(.Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_clk_2x_n90deg), .CE(1'b1), .R(1'b0), .S(1'b0));
+
+// DAC reset (active high)
+always @(posedge dac_clk_1x) dac_rst  <= ~pll_locked;
+//////////////////////////////////////////////////////////////////////////
+
+
 
 //-------------IO Buffering---------------------------------------------//
 
@@ -252,21 +287,38 @@ wire [31:0] fir_result;
 //     .sys_ack      (    sys_ack[0]        )
 //     );
 
-FIR_filter_v2 #(
-    .TNN(4096),   // Total number of samples
-    .DW(32),     // Data bitwidth
-    .NMAC(32),      // Number of Multiply accumulator
-    .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
-  )
-  filter_test
-  (
-    .sample_in(adc_dat_CH1),
-    .result(fir_result),
-    .output_refreshed(led_o_buf[7]),
-    .clk(clk_125)// Input clock
+// FIR_filter_v2 #(
+//     .TNN(64),   // Total number of samples
+//     .DW(32),     // Data bitwidth
+//     .NMAC(8),      // Number of Multiply accumulator
+//     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
+//   )
+//   filter_test
+//   (
+//     .sample_in(adc_dat_CH1),
+//     .result(fir_result),
+//     .output_refreshed(led_o_buf[7]),
+//     .clk(clk_125)// Input clock
 
-  );
+//   );
 
-// assign led_o_buf = fir_result[6:0];
-assign led_o_buf[6:0] = 7'b0;
+assign led_o_buf[6:0] = fir_result[6:0];
+// assign led_o_buf[6:0] = 7'b0;
+
+DAC_study dac_study_inst (
+  .clk_i         (clk_125         ),
+  .sys_addr      (sys_addr        ),
+  .sys_wdata     (sys_wdata       ),
+  .sys_sel       (sys_sel         ),
+  .sys_wen       (sys_wen[0]      ),
+  .sys_ren       (sys_ren[0]      ),
+  .sys_rdata     (sys_rdata[31:0] ),
+  .sys_err       (sys_err[0]      ),
+  .sys_ack       (sys_ack[0]      ),  
+  .dac_test_CH1  (dac_test_CH1    ),
+  .dac_test_CH2  (dac_test_CH2    )
+);
+
+
+
 endmodule

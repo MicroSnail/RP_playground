@@ -28,11 +28,16 @@ reg clk = 0;
 always 
 #5 clk <= ~clk;
 
-reg [13:0] sample = 0;
+reg signed [13:0] sample = 0;
 
-
+reg signed [13:0] addsub = 1;
 always @(posedge clk) begin
-  sample <= sample[3:0] + 1;
+  if (sample >= 49) begin 
+    addsub <= -1;
+  end else if (sample <= -49) begin 
+    addsub <= 1;
+  end
+  sample <= sample + addsub;
 end
 
 

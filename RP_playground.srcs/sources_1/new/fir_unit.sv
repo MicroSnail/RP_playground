@@ -89,7 +89,7 @@ xpm_memory_spram # (
   // Common module parameters
   .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
-  .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
+  // .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
   .USE_MEM_INIT       (1),              //integer; 0,1

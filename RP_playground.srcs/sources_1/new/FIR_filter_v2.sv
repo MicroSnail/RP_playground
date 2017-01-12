@@ -32,7 +32,7 @@ module FIR_filter_v2
     input [ADC_DW - 1: 0] sample_in          ,
     input                 clk             ,  // Input clock
     output [DW -1 : 0]    result          ,
-    output reg            output_refrehsed, 
+    output reg            output_refreshed, 
 
     // system bus (for debugging?)
     input      [ 32-1: 0] sys_addr        ,  // bus address
@@ -120,10 +120,10 @@ generate
     assign smpl_buf_din[i] = earliest_sample_out[i+1];
   end
 
-  assign smpl_buf_din[NMAC-1] = sample_in;
+  // assign smpl_buf_din[NMAC-1] = sample_in;
 
   //This is only for debugging and use my predefined numbers in a loop
-  // assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
+  assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
 endgenerate
 
 // FIR unit shared signals
@@ -157,7 +157,7 @@ assign sum_ce = sum_ce_1 ^ sum_ce_2;
 reg [$clog2(N_SUM_STAGE) : 0] i_stage = 0; 
 reg sum_done = 0;
 
-reg output_refrehsed_once = 1'b0; 
+reg output_refreshed_once = 1'b0; 
 
 // Controls the signaling for a new sample and the need for a new sample
 // genvar j;
@@ -190,6 +190,7 @@ always @(posedge clk) begin
 
         // Start summing the partial mac outputs
           sum_ce_1        <= ~sum_ce_1;
+          sum_done        <= 1'b0;
 
         end
       (2'b01):
@@ -239,7 +240,6 @@ always @(posedge clk) begin
 // Logic for summation of partial MACs
 
   if(sum_ce) begin
-    sum_done <= 1'b0;
     i_stage <= i_stage + 1;
 
     for (int i = 0; i < N_SUM_STAGE; i++) begin
@@ -249,7 +249,7 @@ always @(posedge clk) begin
           sum_ce_2 <= ~sum_ce_2;
           sum_done <= 1'b1;
           i_stage <= 0;
-          output_refrehsed <= 1'b1;
+          output_refreshed <= 1'b1;
         end           
 
         for (int j = 0; j < (NMAC >> 2) >> i_stage; j++) begin
@@ -267,8 +267,8 @@ always @(posedge clk) begin
     output_buffer <= partial_mac[0];
   end
 
-  if (output_refrehsed)
-    output_refrehsed <= 1'b0;
+  if (output_refreshed)
+    output_refreshed <= 1'b0;
 
 
 end 

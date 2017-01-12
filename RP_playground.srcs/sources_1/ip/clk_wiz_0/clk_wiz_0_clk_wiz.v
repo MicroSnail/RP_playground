@@ -56,8 +56,8 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// __clk_50____50.000______0.000______50.0______143.688_____96.948
-// __clk_25____25.000______0.000______50.0______165.419_____96.948
+// clk_250_n90deg___250.000____-90.000______50.0______104.759_____96.948
+// _clk_250___250.000______0.000______50.0______104.759_____96.948
 // _clk_125___125.000______0.000______50.0______119.348_____96.948
 //
 //----------------------------------------------------------------------------
@@ -71,9 +71,12 @@ module clk_wiz_0_clk_wiz
 
  (// Clock in ports
   // Clock out ports
-  output        clk_50,
-  output        clk_25,
+  output        clk_250_n90deg,
+  output        clk_250,
   output        clk_125,
+  // Status and control signals
+  input         reset,
+  output        locked,
   input         clk_in1
  );
   // Input buffering
@@ -92,8 +95,8 @@ wire clk_in2_clk_wiz_0;
   //    * Unused inputs are tied off
   //    * Unused outputs are labeled unused
 
-  wire        clk_50_clk_wiz_0;
-  wire        clk_25_clk_wiz_0;
+  wire        clk_250_n90deg_clk_wiz_0;
+  wire        clk_250_clk_wiz_0;
   wire        clk_125_clk_wiz_0;
   wire        clk_out4_clk_wiz_0;
   wire        clk_out5_clk_wiz_0;
@@ -113,6 +116,7 @@ wire clk_in2_clk_wiz_0;
   wire        clkout6_unused;
   wire        clkfbstopped_unused;
   wire        clkinstopped_unused;
+  wire        reset_high;
 
   PLLE2_ADV
   #(.BANDWIDTH            ("OPTIMIZED"),
@@ -120,10 +124,10 @@ wire clk_in2_clk_wiz_0;
     .DIVCLK_DIVIDE        (1),
     .CLKFBOUT_MULT        (8),
     .CLKFBOUT_PHASE       (0.000),
-    .CLKOUT0_DIVIDE       (20),
-    .CLKOUT0_PHASE        (0.000),
+    .CLKOUT0_DIVIDE       (4),
+    .CLKOUT0_PHASE        (-90.000),
     .CLKOUT0_DUTY_CYCLE   (0.500),
-    .CLKOUT1_DIVIDE       (40),
+    .CLKOUT1_DIVIDE       (4),
     .CLKOUT1_PHASE        (0.000),
     .CLKOUT1_DUTY_CYCLE   (0.500),
     .CLKOUT2_DIVIDE       (8),
@@ -134,8 +138,8 @@ wire clk_in2_clk_wiz_0;
     // Output clocks
    (
     .CLKFBOUT            (clkfbout_clk_wiz_0),
-    .CLKOUT0             (clk_50_clk_wiz_0),
-    .CLKOUT1             (clk_25_clk_wiz_0),
+    .CLKOUT0             (clk_250_n90deg_clk_wiz_0),
+    .CLKOUT1             (clk_250_clk_wiz_0),
     .CLKOUT2             (clk_125_clk_wiz_0),
     .CLKOUT3             (clkout3_unused),
     .CLKOUT4             (clkout4_unused),
@@ -157,8 +161,10 @@ wire clk_in2_clk_wiz_0;
     // Other control and status signals
     .LOCKED              (locked_int),
     .PWRDWN              (1'b0),
-    .RST                 (1'b0));
+    .RST                 (reset_high));
+  assign reset_high = reset; 
 
+  assign locked = locked_int;
 // Clock Monitor clock assigning
 //--------------------------------------
  // Output buffering
@@ -171,13 +177,13 @@ wire clk_in2_clk_wiz_0;
 
 
   BUFG clkout1_buf
-   (.O   (clk_50),
-    .I   (clk_50_clk_wiz_0));
+   (.O   (clk_250_n90deg),
+    .I   (clk_250_n90deg_clk_wiz_0));
 
 
   BUFG clkout2_buf
-   (.O   (clk_25),
-    .I   (clk_25_clk_wiz_0));
+   (.O   (clk_250),
+    .I   (clk_250_clk_wiz_0));
 
   BUFG clkout3_buf
    (.O   (clk_125),
