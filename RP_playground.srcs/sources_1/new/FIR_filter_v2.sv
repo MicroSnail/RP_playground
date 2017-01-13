@@ -24,15 +24,17 @@ module FIR_filter_v2
   #(
     parameter TNN   = 128,   // Total number of samples
     parameter DW    = 32,     // Data bitwidth
+    parameter ROM_DW= 24,
     parameter NMAC  = 8,      // Number of Multiply accumulator
+    parameter DSP_OUT_DW = 48,
     parameter ADC_DW = 14     // ADC bitwidth (14-bit for the board we are using)
   )
   (
-    output [7:0]          led_debug_out   ,
-    input [ADC_DW - 1: 0] sample_in          ,
-    input                 clk             ,  // Input clock
-    output [DW -1 : 0]    result          ,
-    output reg            output_refreshed, 
+    input [ADC_DW - 1: 0]             sample_in,
+    input                             clk,  
+    input                             clk_45deg,  // 45 degree out of phase w.r.t. clk
+    output signed [DSP_OUT_DW -1 : 0] result,
+    output reg                        output_refreshed,  
 
     // system bus (for debugging?)
     input      [ 32-1: 0] sys_addr        ,  // bus address
@@ -50,21 +52,15 @@ localparam BUF_AW = $clog2(TNN) ;     // Address bitwidth for circular buffer
 localparam ROM_AW = $clog2(ND)  ;     // Address bitwidth (For ROM and MAC)
 localparam BUF_RAM_AW = $clog2(ND)  ;
 
-localparam ROM_SIZE     = ND * DW;        // Total number of bits of a single ROM
+localparam ROM_SIZE     = ND * ROM_DW;        // Total number of bits of a single ROM
 localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer for a single MAC
 localparam ROM_LATENCY = 1;           // Must be 1 or higher to infer BRAM, see ROM instantiation template 
 localparam MAC_LATENCY = 2;           
 
-localparam DSP_OUT_DW = 48;
 localparam N_SUM_STAGE = $clog2(NMAC) - 1; // minus 1 because we summed once at the time MAC is done
 
 // Local registers and bus declaration
 reg   [ROM_AW - 1 : 0]    rom_addr = 0;
-wire  [DW - 1 : 0]        coe_00;
-
-// LED logic
-assign led_debug_out = coe_00[7:0];
-
 
 // Circular buffer for sample_in storage
 reg [BUF_AW - 1 : 0]          latest_addr = {BUF_AW{1'b1}};    // Addr for the last obtained sample_in
@@ -89,7 +85,7 @@ assign sample_expired = sample_expired_mac ^ sample_expired_sampler;
 // Initially 0, whichever one changes it flips value;
 
 
-reg [47:0] output_buffer = 0;
+reg signed [47:0] output_buffer = 0;
 assign result = output_buffer;
 
 reg signed [DSP_OUT_DW - 1 : 0] partial_mac [0 : (NMAC >> 1)-1] = '{default: {DSP_OUT_DW{1'b0}}};
@@ -120,10 +116,10 @@ generate
     assign smpl_buf_din[i] = earliest_sample_out[i+1];
   end
 
-  // assign smpl_buf_din[NMAC-1] = sample_in;
+  assign smpl_buf_din[NMAC-1] = sample_in;
 
   //This is only for debugging and use my predefined numbers in a loop
-  assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
+  // assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
 endgenerate
 
 // FIR unit shared signals
@@ -157,7 +153,7 @@ assign sum_ce = sum_ce_1 ^ sum_ce_2;
 reg [$clog2(N_SUM_STAGE) : 0] i_stage = 0; 
 reg sum_done = 0;
 
-reg output_refreshed_once = 1'b0; 
+reg output_refreshed_once = 1'b0;
 
 // Controls the signaling for a new sample and the need for a new sample
 // genvar j;
@@ -317,8 +313,8 @@ always @(posedge clk) begin
   sys_err <= 1'b0 ;
   sys_ack <= sys_en;
   casez (sys_addr[19:0])
-    20'h0000  : begin sys_rdata <= {{32-ROM_AW{1'b0}},  rom_addr}; end
-    20'h0004  : begin sys_rdata <= {{32-DW{1'b0}},      result}; end
+    // 20'h0000  : begin sys_rdata <= {{32-ROM_AW{1'b0}},  rom_addr}; end
+    // 20'h0004  : begin sys_rdata <= {{32-DW{1'b0}},      result}; end
       default : begin sys_rdata <=   32'h0                           ; end
   endcase
 end

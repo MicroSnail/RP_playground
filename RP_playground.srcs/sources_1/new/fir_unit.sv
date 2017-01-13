@@ -89,10 +89,11 @@ xpm_memory_spram # (
   // Common module parameters
   .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
-  // .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
-  .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
+  .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
+  // .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
-  .USE_MEM_INIT       (1),              //integer; 0,1
+  // .USE_MEM_INIT       (1),              //integer; 0,1
+  .USE_MEM_INIT       (0),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
   .MESSAGE_CONTROL    (0),              //integer; 0,1
 

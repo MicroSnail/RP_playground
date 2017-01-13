@@ -155,13 +155,9 @@ assign ps_sys.rdata = sys_rdata[sys_addr[22:20]*32+:32];
 
 assign ps_sys.err   = |(sys_cs & sys_err);
 assign ps_sys.ack   = |(sys_cs & sys_ack);
-
-
-
-
-
 ///////////////////////////////////////////////////////////////
 
+//-------------ARM chip processor---------------------------------------//
 
 processing_system ps(
     .DDR_addr(DDR_addr),
@@ -188,7 +184,19 @@ processing_system ps(
     .clk_125(clk_125),
     .bus(ps_sys)
   );
+//////////////////////////////////////////////////////////////////////////
 
+//-------------IO Buffering---------------------------------------------//
+
+IOBUF iobuf_led   [8-1:0] (.IO(led_o),    .I(led_o_buf), .T(8'b0 ));
+
+// Input with respect to the IO port, so it is from the system to IO port to outside
+// if we want to use the IO port as inputs we set T = 1, use the output of the buffer
+IOBUF iobuf_exp_p_1_inst (.O(exp_p_o_buf[6]), .IO(exp_p_io[6]), .T(1));
+IOBUF iobuf_exp_n_1_inst (.O(exp_n_o_buf[6]), .IO(exp_n_io[6]), .T(1));
+ 
+// assign led_o_buf = ledArray;
+//////////////////////////////////////////////////////////////////////////
 
 
 //-------------ADC Logics-----------------------------------------------//
@@ -222,20 +230,63 @@ end
 always @(posedge adc_clk) adc_rstn <=  pll_locked;
 //////////////////////////////////////////////////////////////////////////
 
+//-------------------------FIR FILTER TEST------------------------------//
+parameter FIR_OUT_BW=48;
+wire signed [FIR_OUT_BW-1:0] fir_result;
+
+FIR_filter_v2 #(
+    .TNN(256),   // Total number of samples
+    .DW(32),     // Data bitwidth
+    .NMAC(4),      // Number of Multiply accumulator
+    .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
+  )
+  filter_test
+  (
+
+    .sample_in(adc_dat_CH1),
+    .result(fir_result),
+    .output_refreshed(led_o_buf[0]),
+    .clk(clk_125),
+        // System bus connection 
+    .sys_addr     (    sys_addr          ),
+    .sys_wdata    (    sys_wdata         ),
+    .sys_sel      (    sys_sel           ),
+    .sys_wen      (    sys_wen[0]        ),
+    .sys_ren      (    sys_ren[0]        ),
+    .sys_rdata    (    sys_rdata[31 : 0] ),
+    .sys_err      (    sys_err[0]        ),
+    .sys_ack      (    sys_ack[0]        )
+
+  );
+
+assign led_o_buf[5:1] = 5'b0;
+assign led_o_buf[7:6] = fir_result[FIR_OUT_BW-1: FIR_OUT_BW-2];
+// assign led_o_buf[6:0] = 7'b0;
+//////////////////////////////////////////////////////////////////////////
+
+
+
 //-------------DAC Logics-----------------------------------------------//
 // NOTE: The code handling ODDR macros down there is mostly from here:
 //       https://github.com/pavel-demin/red-pitaya-notes/blob/master/cores/axis_red_pitaya_dac_v1_0/axis_red_pitaya_dac.v 
 reg [14-1 : 0] dac_CH1;
 reg [14-1 : 0] dac_CH2;
-
 reg dac_rst = 0;
+
+///////////// [IMPORTANT:] CHANGE THIS PARAMETER ACCORDING TO THE SCALING FACTOR OF COEFFICIENTS /////////////
+localparam DAC_SHIFT_RIGHT = 12;
+wire [FIR_OUT_BW-1:0] fir_result_rescaled;
+assign fir_result_rescaled = fir_result >>> DAC_SHIFT_RIGHT;
+
 wire [14-1 : 0] dac_test_CH1;
 wire [14-1 : 0] dac_test_CH2;
 
+assign dac_test_CH2 = {~fir_result_rescaled[FIR_OUT_BW-1], fir_result_rescaled[12:0]};
+
 always @(posedge dac_clk_1x)
 begin
-  dac_CH1 <= {~adc_dat_CH1[13] , adc_dat_CH1[12:0]};
-  dac_CH2 <= dac_test_CH2;
+  dac_CH1 <= dac_test_CH2;
+  dac_CH2 <= {~adc_dat_CH1[13] , adc_dat_CH1[12:0]};
 end
 
 // DDR outputs
@@ -251,73 +302,22 @@ always @(posedge dac_clk_1x) dac_rst  <= ~pll_locked;
 
 
 
-//-------------IO Buffering---------------------------------------------//
 
-IOBUF iobuf_led   [8-1:0] (.IO(led_o),    .I(led_o_buf), .T(8'b0 ));
 
-// Input with respect to the IO port, so it is from the system to IO port to outside
-// if we want to use the IO port as inputs we set T = 1, use the output of the buffer
-IOBUF iobuf_exp_p_1_inst (.O(exp_p_o_buf[6]), .IO(exp_p_io[6]), .T(1));
-IOBUF iobuf_exp_n_1_inst (.O(exp_n_o_buf[6]), .IO(exp_n_io[6]), .T(1));
- 
-// assign led_o_buf = ledArray;
 
-wire [31:0] fir_result;
-
-//////////////////////////////////////////////////////////////////////////
-
-//-------------------------FIR FILTER TEST------------------------------//
-// FIR_filter_v2 #(
-//     .TNN      ( 2048  ), 
-//     .DW       ( 32    ),  
-//     .NMAC     ( 2     )
-//   )
-//   fir_inst 
-//   (
-//     .clk    (clk_125),
-//     .led_debug_out(led_o_buf),
-//     // System bus connection 
-//     .sys_addr     (    sys_addr          ),
-//     .sys_wdata    (    sys_wdata         ),
-//     .sys_sel      (    sys_sel           ),
-//     .sys_wen      (    sys_wen[0]        ),
-//     .sys_ren      (    sys_ren[0]        ),
-//     .sys_rdata    (    sys_rdata[31 : 0]   ),
-//     .sys_err      (    sys_err[0]        ),
-//     .sys_ack      (    sys_ack[0]        )
-//     );
-
-// FIR_filter_v2 #(
-//     .TNN(64),   // Total number of samples
-//     .DW(32),     // Data bitwidth
-//     .NMAC(8),      // Number of Multiply accumulator
-//     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
-//   )
-//   filter_test
-//   (
-//     .sample_in(adc_dat_CH1),
-//     .result(fir_result),
-//     .output_refreshed(led_o_buf[7]),
-//     .clk(clk_125)// Input clock
-
-//   );
-
-assign led_o_buf[6:0] = fir_result[6:0];
-// assign led_o_buf[6:0] = 7'b0;
-
-DAC_study dac_study_inst (
-  .clk_i         (clk_125         ),
-  .sys_addr      (sys_addr        ),
-  .sys_wdata     (sys_wdata       ),
-  .sys_sel       (sys_sel         ),
-  .sys_wen       (sys_wen[0]      ),
-  .sys_ren       (sys_ren[0]      ),
-  .sys_rdata     (sys_rdata[31:0] ),
-  .sys_err       (sys_err[0]      ),
-  .sys_ack       (sys_ack[0]      ),  
-  .dac_test_CH1  (dac_test_CH1    ),
-  .dac_test_CH2  (dac_test_CH2    )
-);
+// DAC_study dac_study_inst (
+//   .clk_i         (clk_125         ),
+//   .sys_addr      (sys_addr        ),
+//   .sys_wdata     (sys_wdata       ),
+//   .sys_sel       (sys_sel         ),
+//   .sys_wen       (sys_wen[0]      ),
+//   .sys_ren       (sys_ren[0]      ),
+//   .sys_rdata     (sys_rdata[31:0] ),
+//   .sys_err       (sys_err[0]      ),
+//   .sys_ack       (sys_ack[0]      ),  
+//   .dac_test_CH1  (dac_test_CH1    ),
+//   .dac_test_CH2  (dac_test_CH2    )
+// );
 
 
 

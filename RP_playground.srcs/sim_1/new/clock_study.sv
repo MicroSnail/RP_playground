@@ -33,6 +33,7 @@ wire pll_clk_250;
 wire pll_clk_250_n90deg;
 wire pll_clk_125;
 wire pll_locked;
+wire pll_clk_125_45;
  
 clk_wiz_0 clock_PLL
   (
@@ -42,6 +43,7 @@ clk_wiz_0 clock_PLL
   .clk_125  ( pll_clk_125 ),
  // Clock in ports
   .clk_in1(adc_clk_in),
+  .clk_125_45(pll_clk_125_45),
   .locked(pll_locked)
   );
 
