@@ -235,9 +235,9 @@ parameter FIR_OUT_BW=48;
 wire signed [FIR_OUT_BW-1:0] fir_result;
 
 FIR_filter_v2 #(
-    .TNN(256),   // Total number of samples
+    .TNN(4096),   // Total number of samples
     .DW(32),     // Data bitwidth
-    .NMAC(4),      // Number of Multiply accumulator
+    .NMAC(64),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test
@@ -274,7 +274,7 @@ reg [14-1 : 0] dac_CH2;
 reg dac_rst = 0;
 
 ///////////// [IMPORTANT:] CHANGE THIS PARAMETER ACCORDING TO THE SCALING FACTOR OF COEFFICIENTS /////////////
-localparam DAC_SHIFT_RIGHT = 12;
+localparam DAC_SHIFT_RIGHT = 14;
 wire [FIR_OUT_BW-1:0] fir_result_rescaled;
 assign fir_result_rescaled = fir_result >>> DAC_SHIFT_RIGHT;
 
