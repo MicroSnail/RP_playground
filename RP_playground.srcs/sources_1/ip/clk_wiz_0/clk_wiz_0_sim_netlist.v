@@ -1,7 +1,7 @@
 // Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2016.4 (win64) Build 1733598 Wed Dec 14 22:35:39 MST 2016
-// Date        : Thu Jan 12 16:31:58 2017
+// Date        : Mon Jan 16 11:07:38 2017
 // Host        : EpsilonIJK running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               D:/Users/MicroSnail/Documents/Cornell/Vengalattore/FPGA_PID/RP_playground/RP_playground.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v
@@ -17,34 +17,26 @@ module clk_wiz_0
    (clk_250_n90deg,
     clk_250,
     clk_125,
-    clk_125_45,
-    reset,
     locked,
     clk_in1);
   output clk_250_n90deg;
   output clk_250;
   output clk_125;
-  output clk_125_45;
-  input reset;
   output locked;
   input clk_in1;
 
   wire clk_125;
-  wire clk_125_45;
   wire clk_250;
   wire clk_250_n90deg;
   (* IBUF_LOW_PWR *) wire clk_in1;
   wire locked;
-  wire reset;
 
   clk_wiz_0_clk_wiz_0_clk_wiz inst
        (.clk_125(clk_125),
-        .clk_125_45(clk_125_45),
         .clk_250(clk_250),
         .clk_250_n90deg(clk_250_n90deg),
         .clk_in1(clk_in1),
-        .locked(locked),
-        .reset(reset));
+        .locked(locked));
 endmodule
 
 (* ORIG_REF_NAME = "clk_wiz_0_clk_wiz" *) 
@@ -52,21 +44,15 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
    (clk_250_n90deg,
     clk_250,
     clk_125,
-    clk_125_45,
-    reset,
     locked,
     clk_in1);
   output clk_250_n90deg;
   output clk_250;
   output clk_125;
-  output clk_125_45;
-  input reset;
   output locked;
   input clk_in1;
 
   wire clk_125;
-  wire clk_125_45;
-  wire clk_125_45_clk_wiz_0;
   wire clk_125_clk_wiz_0;
   wire clk_250;
   wire clk_250_clk_wiz_0;
@@ -77,7 +63,7 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
   wire clkfbout_buf_clk_wiz_0;
   wire clkfbout_clk_wiz_0;
   wire locked;
-  wire reset;
+  wire NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED;
   wire NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED;
   wire NLW_plle2_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_plle2_adv_inst_DRDY_UNCONNECTED;
@@ -109,10 +95,6 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
        (.I(clk_125_clk_wiz_0),
         .O(clk_125));
   (* BOX_TYPE = "PRIMITIVE" *) 
-  BUFG clkout4_buf
-       (.I(clk_125_45_clk_wiz_0),
-        .O(clk_125_45));
-  (* BOX_TYPE = "PRIMITIVE" *) 
   PLLE2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
     .CLKFBOUT_MULT(8),
@@ -128,9 +110,9 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
     .CLKOUT2_DIVIDE(8),
     .CLKOUT2_DUTY_CYCLE(0.500000),
     .CLKOUT2_PHASE(0.000000),
-    .CLKOUT3_DIVIDE(8),
+    .CLKOUT3_DIVIDE(1),
     .CLKOUT3_DUTY_CYCLE(0.500000),
-    .CLKOUT3_PHASE(45.000000),
+    .CLKOUT3_PHASE(0.000000),
     .CLKOUT4_DIVIDE(1),
     .CLKOUT4_DUTY_CYCLE(0.500000),
     .CLKOUT4_PHASE(0.000000),
@@ -154,7 +136,7 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .CLKOUT0(clk_250_n90deg_clk_wiz_0),
         .CLKOUT1(clk_250_clk_wiz_0),
         .CLKOUT2(clk_125_clk_wiz_0),
-        .CLKOUT3(clk_125_45_clk_wiz_0),
+        .CLKOUT3(NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED),
         .CLKOUT4(NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED),
         .CLKOUT5(NLW_plle2_adv_inst_CLKOUT5_UNCONNECTED),
         .DADDR({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
@@ -166,7 +148,7 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .DWE(1'b0),
         .LOCKED(locked),
         .PWRDWN(1'b0),
-        .RST(reset));
+        .RST(1'b0));
 endmodule
 `ifndef GLBL
 `define GLBL

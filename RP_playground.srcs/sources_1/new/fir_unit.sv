@@ -79,7 +79,7 @@ end
 // Dummy data only for debugging
 // Set .USE_MEM_INIT to 1? (The manual says this doesn't matter so I don't know...)
 // But make sure to use .MEMORY_INIT_FILE if loading a file is needed
-localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
+// localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
 
 // RAM for storing samples
 // xpm_memory_spram: Single Port RAM

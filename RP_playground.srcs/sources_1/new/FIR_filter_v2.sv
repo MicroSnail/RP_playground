@@ -22,7 +22,7 @@
 
 module FIR_filter_v2
   #(
-    parameter TNN   = 128,   // Total number of samples
+    parameter TNN   = 128,   // Total number of samples [IMPORTANT: MAKE THIS AN INTEGER MULTIPLE OF NMAC] 
     parameter DW    = 32,     // Data bitwidth
     parameter ROM_DW= 24,
     parameter NMAC  = 8,      // Number of Multiply accumulator
@@ -47,25 +47,32 @@ module FIR_filter_v2
     output reg            sys_ack       
   );
 
-localparam ND     = TNN >> $clog2(NMAC)    ;     // Number of Data per MAC
+// localparam ND     = TNN >> $clog2(NMAC)    ;     // Number of Data per MAC
+localparam ND     = TNN / NMAC;     // Number of Data per MAC
+
+// This is probably obselete at this point...
 localparam BUF_AW = $clog2(TNN) ;     // Address bitwidth for circular buffer
-localparam ROM_AW = $clog2(ND)  ;     // Address bitwidth (For ROM and MAC)
-localparam BUF_RAM_AW = $clog2(ND)  ;
+
+localparam ROM_AW = $clog2(ND - 1) + 1  ;     // Address bitwidth (For ROM and MAC)
+localparam BUF_RAM_AW = $clog2(ND - 1) + 1;
 
 localparam ROM_SIZE     = ND * ROM_DW;        // Total number of bits of a single ROM
 localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer for a single MAC
 localparam ROM_LATENCY = 1;           // Must be 1 or higher to infer BRAM, see ROM instantiation template 
 localparam MAC_LATENCY = 2;           
 
-localparam N_SUM_STAGE = $clog2(NMAC) - 1; // minus 1 because we summed once at the time MAC is done
+localparam N_SUM_STAGE = $clog2(NMAC - 1) - 1; // minus 1 because we summed once at the time MAC is done
 
 // Local registers and bus declaration
 reg   [ROM_AW - 1 : 0]    rom_addr = 0;
+wire rom_addr_reach_last = ((rom_addr + 1) == ND);
 
 // Circular buffer for sample_in storage
-reg [BUF_AW - 1 : 0]          latest_addr = {BUF_AW{1'b1}};    // Addr for the last obtained sample_in
-wire [BUF_AW - 1 : 0]         earliest_addr;
-assign earliest_addr = latest_addr + 1;
+reg [BUF_RAM_AW - 1 : 0]          latest_addr = {BUF_RAM_AW{1'b1}};    // Addr for the last obtained sample_in
+wire [BUF_RAM_AW - 1 : 0]         earliest_addr;
+
+wire ea_reach_last = ((latest_addr + 1) == ND); // earliest addr reaches the last one, need to wrap to 0 when advancing 
+assign earliest_addr =  ea_reach_last ? 0 : latest_addr + 1;
 
 
 // Signal acknowledging obtaining a sample_in
@@ -88,12 +95,14 @@ assign sample_expired = sample_expired_mac ^ sample_expired_sampler;
 reg signed [47:0] output_buffer = 0;
 assign result = output_buffer;
 
-reg signed [DSP_OUT_DW - 1 : 0] partial_mac [0 : (NMAC >> 1)-1] = '{default: {DSP_OUT_DW{1'b0}}};
+reg signed [DSP_OUT_DW - 1 : 0] partial_mac [0 : (1 << N_SUM_STAGE)-1] = '{default: {DSP_OUT_DW{1'b0}}};
 
 // Signals to activate MAC and clear MAC
 reg mac_clear = 0;
-reg [BUF_AW - 1 : 0] mac_addr = 0;
+reg [BUF_RAM_AW - 1 : 0] mac_addr = 0;
 reg mac_ce = 0;
+
+wire mac_addr_reach_last = (mac_addr + 1 == ND);
 
 reg sampler_en = 1'b1;
 reg [2:0] sampler_delay = 0;
@@ -123,25 +132,29 @@ generate
 endgenerate
 
 // FIR unit shared signals
-wire smpl_buf_wen;
-reg  smpl_buf_wen_1 = 0;
-reg  smpl_buf_wen_2 = 1;
+wire smpl_buf_wen;  // write to sample buffer, this happens when the buffer is not being read
+reg  smpl_buf_wen_1 = 0; // two handles to flip one signal
+reg  smpl_buf_wen_2 = 1; 
 assign smpl_buf_wen = smpl_buf_wen_2 ^ smpl_buf_wen_1;
 assign smpl_buf_addr = smpl_buf_wen ? earliest_addr : mac_addr;
 
 // a counter add latencies to the start of addr advancements
 reg [2:0] addr_delay = 0; 
-reg mac_addr_en = 1;
+reg mac_addr_en = 1;  // Enable addr <= addr + 1; 
 reg rom_addr_en = 1;
 
 reg [ROM_AW : 0] addr_counted = 0;
 
-wire [BUF_AW - 1 : 0] rel_buf_addr;
-assign rel_buf_addr = mac_addr - earliest_addr;
+wire [BUF_RAM_AW - 1 : 0] rel_buf_addr;
+assign rel_buf_addr = mac_addr - earliest_addr; // Was this only for debugging?
 
 // Signal for fir_units to update their earliest sample output buffer
+// This might change in the future if we no longer passes through this 
+// point, might need to add additional cycle to update
 wire is_earliest_addr;
 assign is_earliest_addr = (addr_counted==ND);
+
+
 
 // Signal for controlling the summation cascade after partial MACs finished
 wire sum_ce;
@@ -160,7 +173,7 @@ reg output_refreshed_once = 1'b0;
 always @(posedge clk) begin
   if (sampler_en) begin
     case({sample_expired, sample_obtained}) 
-      (2'b10):  
+      (2'b10): 
         begin
           mac_clear <= 1'b0;
         end
@@ -172,8 +185,13 @@ always @(posedge clk) begin
           smpl_buf_wen_1 <= ~smpl_buf_wen_1;
 
           // Make use of the output immediately and sum them in pairs.
-          for (int j = 0; j < (NMAC >> 1); j++) begin: partial_mac_buffer
-            partial_mac[j] <= mac_out[2*j] + mac_out[2*j + 1];
+          for (int j = 0; j < (1 << N_SUM_STAGE); j++) begin: partial_mac_buffer
+            if(j >= (1 << N_SUM_STAGE)) begin
+              $display("Filling in zeros %d", (1 << N_SUM_STAGE));
+              partial_mac[j] <= 0; //Fill in zeroes if it does not correspond to any NMAC
+            end else begin
+              partial_mac[j] <= mac_out[2*j] + mac_out[2*j + 1];
+            end
           end
           $display("%0d", partial_mac[0]);
         
@@ -189,6 +207,7 @@ always @(posedge clk) begin
           sum_done        <= 1'b0;
 
         end
+
       (2'b01):
         begin
           mac_clear <= 1'b0;
@@ -204,17 +223,19 @@ always @(posedge clk) begin
     sample_obtained_2 <= ~sample_obtained_2;
     sample_expired_sampler    <= ~sample_expired_sampler;
     latest_addr <= earliest_addr;
-    mac_addr    <= earliest_addr + 1;  // need the new earliest address
+
+    // feed the new earliest address to start next round MAC operations
+    mac_addr    <= ea_reach_last ? 0 : earliest_addr + 1;
   end
 
   if (sample_obtained) begin
-      mac_ce <= 1;
+      mac_ce <= 1'b1;
   end 
 
   if (mac_addr_en) begin
     if (mac_ce) begin
-      mac_addr <= mac_addr + 1;
-      rom_addr <= rom_addr + 1;
+      mac_addr <= mac_addr_reach_last ? 0 : mac_addr + 1;
+      rom_addr <= rom_addr_reach_last ? 0 : rom_addr + 1;
 
       addr_counted <= addr_counted + 1;
     end
@@ -248,7 +269,7 @@ always @(posedge clk) begin
           output_refreshed <= 1'b1;
         end           
 
-        for (int j = 0; j < (NMAC >> 2) >> i_stage; j++) begin
+        for (int j = 0; j < ((1 << (N_SUM_STAGE-1)) >> i_stage); j++) begin
           partial_mac[j*(1<<(i+1))] <= partial_mac[j*(1<<(i+1))] + partial_mac[j*(1<<(i+1)) + (1 << i)];
           // $display("Doing this");
           // $display("partial_mac[%0d] <= partial_mac[%0d] + partial_mac[%0d]",j*(1<<(i+1)), j*(1<<(i+1)), j*(1<<(i+1)) + (1 << i));
@@ -263,10 +284,7 @@ always @(posedge clk) begin
     output_buffer <= partial_mac[0];
   end
 
-  if (output_refreshed)
-    output_refreshed <= 1'b0;
-
-
+  if (output_refreshed) output_refreshed <= 1'b0;
 end 
 
 
@@ -299,24 +317,6 @@ generate
   end
 endgenerate
 
-//  System bus connection
 
-always @(posedge clk) begin
-  if (sys_wen) begin
-    // if (sys_addr[19:0]==20'h0000)   rom_addr       <= sys_wdata[24-1: 0] ;
-  end
-end
-
-wire sys_en;
-assign sys_en = sys_wen | sys_ren;
-always @(posedge clk) begin
-  sys_err <= 1'b0 ;
-  sys_ack <= sys_en;
-  casez (sys_addr[19:0])
-    // 20'h0000  : begin sys_rdata <= {{32-ROM_AW{1'b0}},  rom_addr}; end
-    // 20'h0004  : begin sys_rdata <= {{32-DW{1'b0}},      result}; end
-      default : begin sys_rdata <=   32'h0                           ; end
-  endcase
-end
 
 endmodule

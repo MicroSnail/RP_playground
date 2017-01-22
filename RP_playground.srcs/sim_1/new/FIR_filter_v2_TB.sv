@@ -45,9 +45,9 @@ end
 
 
 FIR_filter_v2 #(
-    .TNN(64),   // Total number of samples
+    .TNN(20),   // Total number of samples
     .DW(32),     // Data bitwidth
-    .NMAC(8),      // Number of Multiply accumulator
+    .NMAC(4),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_inst

@@ -235,9 +235,9 @@ parameter FIR_OUT_BW=48;
 wire signed [FIR_OUT_BW-1:0] fir_result;
 
 FIR_filter_v2 #(
-    .TNN(4096),   // Total number of samples
+    .TNN(32768),   // Total number of samples
     .DW(32),     // Data bitwidth
-    .NMAC(64),      // Number of Multiply accumulator
+    .NMAC(32),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test
@@ -246,21 +246,11 @@ FIR_filter_v2 #(
     .sample_in(adc_dat_CH1),
     .result(fir_result),
     .output_refreshed(led_o_buf[0]),
-    .clk(clk_125),
-        // System bus connection 
-    .sys_addr     (    sys_addr          ),
-    .sys_wdata    (    sys_wdata         ),
-    .sys_sel      (    sys_sel           ),
-    .sys_wen      (    sys_wen[0]        ),
-    .sys_ren      (    sys_ren[0]        ),
-    .sys_rdata    (    sys_rdata[31 : 0] ),
-    .sys_err      (    sys_err[0]        ),
-    .sys_ack      (    sys_ack[0]        )
-
+    .clk(clk_125)
   );
 
-assign led_o_buf[5:1] = 5'b0;
-assign led_o_buf[7:6] = fir_result[FIR_OUT_BW-1: FIR_OUT_BW-2];
+// assign led_o_buf[5:1] = 5'b0;
+// assign led_o_buf[7:6] = fir_result[FIR_OUT_BW-1: FIR_OUT_BW-2];
 // assign led_o_buf[6:0] = 7'b0;
 //////////////////////////////////////////////////////////////////////////
 
@@ -274,19 +264,38 @@ reg [14-1 : 0] dac_CH2;
 reg dac_rst = 0;
 
 ///////////// [IMPORTANT:] CHANGE THIS PARAMETER ACCORDING TO THE SCALING FACTOR OF COEFFICIENTS /////////////
-localparam DAC_SHIFT_RIGHT = 14;
+localparam DAC_SHIFT_RIGHT = 15;
 wire [FIR_OUT_BW-1:0] fir_result_rescaled;
 assign fir_result_rescaled = fir_result >>> DAC_SHIFT_RIGHT;
 
-wire [14-1 : 0] dac_test_CH1;
-wire [14-1 : 0] dac_test_CH2;
+wire [14-1 : 0] dac_CH1_wire;
+wire [14-1 : 0] dac_CH2_wire;
 
-assign dac_test_CH2 = {~fir_result_rescaled[FIR_OUT_BW-1], fir_result_rescaled[12:0]};
+reg [14-1: 0] fir_result_rescaled_trunc;
 
-always @(posedge dac_clk_1x)
+always @(posedge clk_125) begin // clip the fir_result_rescaled if it overflows
+  //positive overflow
+  if({fir_result_rescaled[FIR_OUT_BW-1], |fir_result_rescaled[FIR_OUT_BW-2:13]}==2'b01) begin
+    fir_result_rescaled_trunc <= 14'b11_1111_1111_1111;
+  end else if({fir_result_rescaled[FIR_OUT_BW-1], &fir_result_rescaled[FIR_OUT_BW-2:13]}==2'b10)begin // negative overflow
+    fir_result_rescaled_trunc <= 14'b0;
+  end else begin 
+    fir_result_rescaled_trunc <= {~fir_result_rescaled[FIR_OUT_BW-1], fir_result_rescaled[12:0]};
+  end
+  
+end
+
+assign dac_CH2_wire = fir_result_rescaled_trunc;
+
+
+
+
+always @(posedge dac_clk_1x)  // dac_clk_1x = 125MHz 
 begin
-  dac_CH1 <= dac_test_CH2;
-  dac_CH2 <= {~adc_dat_CH1[13] , adc_dat_CH1[12:0]};
+  dac_CH1 <= dac_CH1_wire;
+  // dac_CH2 <= dac_CH1_buf;
+  dac_CH2 <= dac_CH2_wire;
+  // dac_CH2 <= dac_CH2_wire;
 end
 
 // DDR outputs
@@ -300,25 +309,28 @@ ODDR ODDR_clk(.Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_clk_2x_n90deg), .CE(1'
 always @(posedge dac_clk_1x) dac_rst  <= ~pll_locked;
 //////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-// DAC_study dac_study_inst (
-//   .clk_i         (clk_125         ),
-//   .sys_addr      (sys_addr        ),
-//   .sys_wdata     (sys_wdata       ),
-//   .sys_sel       (sys_sel         ),
-//   .sys_wen       (sys_wen[0]      ),
-//   .sys_ren       (sys_ren[0]      ),
-//   .sys_rdata     (sys_rdata[31:0] ),
-//   .sys_err       (sys_err[0]      ),
-//   .sys_ack       (sys_ack[0]      ),  
-//   .dac_test_CH1  (dac_test_CH1    ),
-//   .dac_test_CH2  (dac_test_CH2    )
-// );
-
-
+// Testing PID block 
+PID_block #(.RESCALE_FACTOR(DAC_SHIFT_RIGHT) ) 
+    pid_inst 
+  (
+  .clk_i        ( clk_125      ),
+  .rstn_i       ( 1'b1     ),
+  // .adc_in       ( adc_dat_CH1),
+  // .dat_i        ( {adc_dat_CH1[13], {48-14{1'b0}}, adc_dat_CH1[12:0]}  ),
+  .dat_i        ( fir_result_rescaled   ),
+  .dat_o        ( dac_CH1_wire ),
+  // .errorMon_o   ( dac_CH2_wire ),
+  .KiEnabled    (      1     ),
+  .KpEnabled    (      1     ),
+        // System bus connection 
+  .sys_addr     (    sys_addr          ),
+  .sys_wdata    (    sys_wdata         ),
+  .sys_sel      (    sys_sel           ),
+  .sys_wen      (    sys_wen[0]        ),
+  .sys_ren      (    sys_ren[0]        ),
+  .sys_rdata    (    sys_rdata[31 : 0] ),
+  .sys_err      (    sys_err[0]        ),
+  .sys_ack      (    sys_ack[0]        )  
+  );
 
 endmodule

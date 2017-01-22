@@ -59,7 +59,6 @@
 // clk_250_n90deg___250.000____-90.000______50.0______104.759_____96.948
 // _clk_250___250.000______0.000______50.0______104.759_____96.948
 // _clk_125___125.000______0.000______50.0______119.348_____96.948
-// clk_125_45___125.000_____45.000______50.0______119.348_____96.948
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -75,9 +74,7 @@ module clk_wiz_0_clk_wiz
   output        clk_250_n90deg,
   output        clk_250,
   output        clk_125,
-  output        clk_125_45,
   // Status and control signals
-  input         reset,
   output        locked,
   input         clk_in1
  );
@@ -112,12 +109,12 @@ wire clk_in2_clk_wiz_0;
   wire        clkfbout_clk_wiz_0;
   wire        clkfbout_buf_clk_wiz_0;
   wire        clkfboutb_unused;
+   wire clkout3_unused;
    wire clkout4_unused;
   wire        clkout5_unused;
   wire        clkout6_unused;
   wire        clkfbstopped_unused;
   wire        clkinstopped_unused;
-  wire        reset_high;
 
   PLLE2_ADV
   #(.BANDWIDTH            ("OPTIMIZED"),
@@ -134,9 +131,6 @@ wire clk_in2_clk_wiz_0;
     .CLKOUT2_DIVIDE       (8),
     .CLKOUT2_PHASE        (0.000),
     .CLKOUT2_DUTY_CYCLE   (0.500),
-    .CLKOUT3_DIVIDE       (8),
-    .CLKOUT3_PHASE        (45.000),
-    .CLKOUT3_DUTY_CYCLE   (0.500),
     .CLKIN1_PERIOD        (8.0))
   plle2_adv_inst
     // Output clocks
@@ -145,7 +139,7 @@ wire clk_in2_clk_wiz_0;
     .CLKOUT0             (clk_250_n90deg_clk_wiz_0),
     .CLKOUT1             (clk_250_clk_wiz_0),
     .CLKOUT2             (clk_125_clk_wiz_0),
-    .CLKOUT3             (clk_125_45_clk_wiz_0),
+    .CLKOUT3             (clkout3_unused),
     .CLKOUT4             (clkout4_unused),
     .CLKOUT5             (clkout5_unused),
      // Input clock control
@@ -165,8 +159,7 @@ wire clk_in2_clk_wiz_0;
     // Other control and status signals
     .LOCKED              (locked_int),
     .PWRDWN              (1'b0),
-    .RST                 (reset_high));
-  assign reset_high = reset; 
+    .RST                 (1'b0));
 
   assign locked = locked_int;
 // Clock Monitor clock assigning
@@ -192,10 +185,6 @@ wire clk_in2_clk_wiz_0;
   BUFG clkout3_buf
    (.O   (clk_125),
     .I   (clk_125_clk_wiz_0));
-
-  BUFG clkout4_buf
-   (.O   (clk_125_45),
-    .I   (clk_125_45_clk_wiz_0));
 
 
 

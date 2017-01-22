@@ -58,7 +58,6 @@
 // clk_250_n90deg___250.000____-90.000______50.0______104.759_____96.948
 // _clk_250___250.000______0.000______50.0______104.759_____96.948
 // _clk_125___125.000______0.000______50.0______119.348_____96.948
-// clk_125_45___125.000_____45.000______50.0______119.348_____96.948
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -77,9 +76,7 @@
     .clk_250_n90deg(clk_250_n90deg),     // output clk_250_n90deg
     .clk_250(clk_250),     // output clk_250
     .clk_125(clk_125),     // output clk_125
-    .clk_125_45(clk_125_45),     // output clk_125_45
     // Status and control signals
-    .reset(reset), // input reset
     .locked(locked),       // output locked
    // Clock in ports
     .clk_in1(clk_in1));      // input clk_in1

@@ -1,7 +1,7 @@
 -- Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2016.4 (win64) Build 1733598 Wed Dec 14 22:35:39 MST 2016
--- Date        : Thu Jan 12 16:31:58 2017
+-- Date        : Mon Jan 16 11:07:38 2017
 -- Host        : EpsilonIJK running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               D:/Users/MicroSnail/Documents/Cornell/Vengalattore/FPGA_PID/RP_playground/RP_playground.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.vhdl
@@ -19,8 +19,6 @@ entity clk_wiz_0_clk_wiz_0_clk_wiz is
     clk_250_n90deg : out STD_LOGIC;
     clk_250 : out STD_LOGIC;
     clk_125 : out STD_LOGIC;
-    clk_125_45 : out STD_LOGIC;
-    reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
@@ -29,13 +27,13 @@ entity clk_wiz_0_clk_wiz_0_clk_wiz is
 end clk_wiz_0_clk_wiz_0_clk_wiz;
 
 architecture STRUCTURE of clk_wiz_0_clk_wiz_0_clk_wiz is
-  signal clk_125_45_clk_wiz_0 : STD_LOGIC;
   signal clk_125_clk_wiz_0 : STD_LOGIC;
   signal clk_250_clk_wiz_0 : STD_LOGIC;
   signal clk_250_n90deg_clk_wiz_0 : STD_LOGIC;
   signal clk_in1_clk_wiz_0 : STD_LOGIC;
   signal clkfbout_buf_clk_wiz_0 : STD_LOGIC;
   signal clkfbout_clk_wiz_0 : STD_LOGIC;
+  signal NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED : STD_LOGIC;
   signal NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED : STD_LOGIC;
   signal NLW_plle2_adv_inst_CLKOUT5_UNCONNECTED : STD_LOGIC;
   signal NLW_plle2_adv_inst_DRDY_UNCONNECTED : STD_LOGIC;
@@ -52,7 +50,6 @@ architecture STRUCTURE of clk_wiz_0_clk_wiz_0_clk_wiz is
   attribute BOX_TYPE of clkout1_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of clkout2_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of clkout3_buf : label is "PRIMITIVE";
-  attribute BOX_TYPE of clkout4_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of plle2_adv_inst : label is "PRIMITIVE";
 begin
 clkf_buf: unisim.vcomponents.BUFG
@@ -83,11 +80,6 @@ clkout3_buf: unisim.vcomponents.BUFG
       I => clk_125_clk_wiz_0,
       O => clk_125
     );
-clkout4_buf: unisim.vcomponents.BUFG
-     port map (
-      I => clk_125_45_clk_wiz_0,
-      O => clk_125_45
-    );
 plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
     generic map(
       BANDWIDTH => "OPTIMIZED",
@@ -104,9 +96,9 @@ plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
       CLKOUT2_DIVIDE => 8,
       CLKOUT2_DUTY_CYCLE => 0.500000,
       CLKOUT2_PHASE => 0.000000,
-      CLKOUT3_DIVIDE => 8,
+      CLKOUT3_DIVIDE => 1,
       CLKOUT3_DUTY_CYCLE => 0.500000,
-      CLKOUT3_PHASE => 45.000000,
+      CLKOUT3_PHASE => 0.000000,
       CLKOUT4_DIVIDE => 1,
       CLKOUT4_DUTY_CYCLE => 0.500000,
       CLKOUT4_PHASE => 0.000000,
@@ -131,7 +123,7 @@ plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
       CLKOUT0 => clk_250_n90deg_clk_wiz_0,
       CLKOUT1 => clk_250_clk_wiz_0,
       CLKOUT2 => clk_125_clk_wiz_0,
-      CLKOUT3 => clk_125_45_clk_wiz_0,
+      CLKOUT3 => NLW_plle2_adv_inst_CLKOUT3_UNCONNECTED,
       CLKOUT4 => NLW_plle2_adv_inst_CLKOUT4_UNCONNECTED,
       CLKOUT5 => NLW_plle2_adv_inst_CLKOUT5_UNCONNECTED,
       DADDR(6 downto 0) => B"0000000",
@@ -143,7 +135,7 @@ plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
       DWE => '0',
       LOCKED => locked,
       PWRDWN => '0',
-      RST => reset
+      RST => '0'
     );
 end STRUCTURE;
 library IEEE;
@@ -155,8 +147,6 @@ entity clk_wiz_0 is
     clk_250_n90deg : out STD_LOGIC;
     clk_250 : out STD_LOGIC;
     clk_125 : out STD_LOGIC;
-    clk_125_45 : out STD_LOGIC;
-    reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
@@ -169,11 +159,9 @@ begin
 inst: entity work.clk_wiz_0_clk_wiz_0_clk_wiz
      port map (
       clk_125 => clk_125,
-      clk_125_45 => clk_125_45,
       clk_250 => clk_250,
       clk_250_n90deg => clk_250_n90deg,
       clk_in1 => clk_in1,
-      locked => locked,
-      reset => reset
+      locked => locked
     );
 end STRUCTURE;
