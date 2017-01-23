@@ -28,15 +28,15 @@ reg clk = 0;
 always 
 #5 clk <= ~clk;
 
-reg signed [13:0] sample = 0;
+reg signed [13:0] sample = -500;
 
 reg signed [13:0] addsub = 1;
 always @(posedge clk) begin
-  if (sample >= 49) begin 
-    addsub <= -1;
-  end else if (sample <= -49) begin 
-    addsub <= 1;
-  end
+  // if (sample >= 49) begin 
+  //   addsub <= -1;
+  // end else if (sample <= -49) begin 
+  //   addsub <= 1;
+  // end
   sample <= sample + addsub;
 end
 
@@ -45,9 +45,9 @@ end
 
 
 FIR_filter_v2 #(
-    .TNN(20),   // Total number of samples
-    .DW(32),     // Data bitwidth
-    .NMAC(4),      // Number of Multiply accumulator
+    .TNN(40),   // Total number of samples
+    .ROM_DW(18),
+    .NMAC(5),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_inst

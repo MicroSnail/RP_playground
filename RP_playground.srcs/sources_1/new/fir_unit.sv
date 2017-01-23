@@ -25,16 +25,14 @@ module fir_unit #(
     parameter MEM_ID_1 = 0,
     parameter MEM_INIT_FILE = "FIR_COEFF_00.MEM",
     parameter TNN   = 16,   // Total number of samples
-    parameter DW    = 32,     // Data bitwidth
     parameter ROM_DW=24,
     parameter NMAC  = 1,      // Number of Multiply accumulator
     parameter ADC_DW = 14,     // ADC bitwidth (14-bit for the board we are using)
     parameter ROM_LATENCY = 1,  
     parameter MAC_LATENCY = 2,
-    parameter ND     = TNN >> $clog2(NMAC),     // Number of Data per MAC
-    parameter BUF_AW = $clog2(TNN),     // Address bitwidth for circular buffer
-    parameter ROM_AW = $clog2(ND),     // Address bitwidth (For ROM and MAC)
-    parameter BUF_RAM_AW = $clog2(ND)   // RAM address bitwidth
+    parameter ND     = TNN / NMAC,     // Number of Data per MAC
+    parameter ROM_AW = $clog2(ND - 1),     // Address bitwidth (For ROM and MAC)
+    parameter BUF_RAM_AW = $clog2(ND - 1)   // RAM address bitwidth
   )
 ( 
   input                           clk,
@@ -44,7 +42,7 @@ module fir_unit #(
   input [BUF_RAM_AW - 1 : 0]      smpl_buf_addr,
   input signed [ADC_DW - 1 : 0]   smpl_buf_din,
   output signed [ADC_DW - 1 : 0]  smpl_buf_dout, 
-  output  [48-1 : 0]              mac_out,
+  output signed [48-1 : 0]              mac_out,
   input                           mac_ce,
   input                           mac_clear,
   output signed [ADC_DW - 1 : 0]  earliest_sample_out,
@@ -59,7 +57,7 @@ localparam BUF_RAM_SIZE = ND * ADC_DW;    // Total number of bits of the buffer 
 wire  [ROM_DW - 1 : 0]        coe_out;
 // wire [ADC_DW - 1 : 0] smpl_buf_dout;
 
-reg signed  [ADC_DW - 1 : 0]  earliest_sample = 0;
+reg signed  [ADC_DW - 1 : 0]  earliest_sample = -99;
 assign earliest_sample_out = earliest_sample;
 reg update_earliest_buffer_trig = 0;
 
@@ -79,7 +77,7 @@ end
 // Dummy data only for debugging
 // Set .USE_MEM_INIT to 1? (The manual says this doesn't matter so I don't know...)
 // But make sure to use .MEMORY_INIT_FILE if loading a file is needed
-// localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
+localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
 
 // RAM for storing samples
 // xpm_memory_spram: Single Port RAM
@@ -89,11 +87,11 @@ xpm_memory_spram # (
   // Common module parameters
   .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
-  .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
-  // .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
+  // .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
+  .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
-  // .USE_MEM_INIT       (1),              //integer; 0,1
-  .USE_MEM_INIT       (0),              //integer; 0,1
+  .USE_MEM_INIT       (1),              //integer; 0,1
+  // .USE_MEM_INIT       (0),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
   .MESSAGE_CONTROL    (0),              //integer; 0,1
 
@@ -179,12 +177,12 @@ xpm_memory_sprom # (
 MACC_MACRO #(
    .DEVICE("7SERIES"), // Target Device: "7SERIES" 
    .LATENCY(MAC_LATENCY),        // Desired clock cycle latency, 1-4
-   .WIDTH_A(24),       // Multiplier A-input bus width, 1-25
-   .WIDTH_B(14),       // Multiplier B-input bus width, 1-18
+   .WIDTH_A(ROM_DW),       // Multiplier A-input bus width, 1-25
+   .WIDTH_B(ADC_DW),       // Multiplier B-input bus width, 1-18
    .WIDTH_P(48)        // Accumulator output bus width, 1-48
 ) MACC_MACRO_inst (
    .P(mac_out),     // MACC output bus, width determined by WIDTH_P parameter 
-   .A(coe_out[23:0]),     // MACC input A bus, width determined by WIDTH_A parameter 
+   .A(coe_out),     // MACC input A bus, width determined by WIDTH_A parameter 
    .ADDSUB(1'b1), // 1-bit add/sub input, high selects add, low selects subtract
    .B(smpl_buf_dout),     // MACC input B bus, width determined by WIDTH_B parameter 
    .CARRYIN(1'b0), // 1-bit carry-in input to accumulator
