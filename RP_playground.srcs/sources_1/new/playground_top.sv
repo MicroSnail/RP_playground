@@ -235,9 +235,9 @@ parameter FIR_OUT_BW=48;
 wire signed [FIR_OUT_BW-1:0] fir_result;
 
 FIR_filter_v2 #(
-    .TNN(32768),   // Total number of samples
-    .DW(32),     // Data bitwidth
-    .NMAC(32),      // Number of Multiply accumulator
+    .TNN(64*60),   // Total number of samples
+    .ROM_DW(24),  // coefficient bitwdith
+    .NMAC(60),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test

@@ -134,11 +134,11 @@ generate
   for (i = 0; i < NMAC-1; i++) begin
     assign smpl_buf_din[i] = earliest_sample_out[i+1];
   end
-
-  // assign smpl_buf_din[NMAC-1] = sample_in;
+  
+  assign smpl_buf_din[NMAC-1] = sample_in;
 
   //This is only for debugging and use my predefined numbers in a loop
-  assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
+  // assign smpl_buf_din[NMAC-1] = earliest_sample_out[0];     
 endgenerate
 
 // FIR unit shared signals
@@ -239,7 +239,7 @@ always @(posedge clk) begin
     latest_addr <= earliest_addr;
 
     // feed the new earliest address to start next round MAC operations
-    mac_addr    <= ea_reach_last ? 0 : earliest_addr + 1;
+    mac_addr    <= earliest_addr + 1;
   end
 
   if (sample_obtained) begin
@@ -248,8 +248,8 @@ always @(posedge clk) begin
 
   if (mac_addr_en) begin
     if (mac_ce) begin
-      mac_addr <= mac_addr_reach_last ? 0 : mac_addr + 1;
-      rom_addr <= rom_addr_reach_last ? 0 : rom_addr + 1;
+      mac_addr <= mac_addr + 1;
+      rom_addr <= rom_addr + 1;
 
       addr_counted <= addr_counted + 1;
     end

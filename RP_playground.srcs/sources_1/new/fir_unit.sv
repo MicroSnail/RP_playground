@@ -77,7 +77,7 @@ end
 // Dummy data only for debugging
 // Set .USE_MEM_INIT to 1? (The manual says this doesn't matter so I don't know...)
 // But make sure to use .MEMORY_INIT_FILE if loading a file is needed
-localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
+// localparam dummy_data_init = {"DUMMY_DATA_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
 
 // RAM for storing samples
 // xpm_memory_spram: Single Port RAM
@@ -87,11 +87,11 @@ xpm_memory_spram # (
   // Common module parameters
   .MEMORY_SIZE        (BUF_RAM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", "block" or "ultra";
-  // .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
-  .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
+  .MEMORY_INIT_FILE   ("none"),         //string; "none" or "<filename>.mem" 
+  // .MEMORY_INIT_FILE   (dummy_data_init),         //string; "none" or "<filename>.mem" 
   .MEMORY_INIT_PARAM  (""    ),         //string;
-  .USE_MEM_INIT       (1),              //integer; 0,1
-  // .USE_MEM_INIT       (0),              //integer; 0,1
+  // .USE_MEM_INIT       (1),              //integer; 0,1
+  .USE_MEM_INIT       (0),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
   .MESSAGE_CONTROL    (0),              //integer; 0,1
 
