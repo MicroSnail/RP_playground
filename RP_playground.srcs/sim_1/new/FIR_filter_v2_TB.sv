@@ -41,7 +41,13 @@ always @(posedge clk) begin
 end
 
 
+reg [7:0] clk_reducer = 0;
+always @(posedge clk) begin
+  clk_reducer <= clk_reducer[6:0] + 1;
+end
 
+wire fir_clk;
+assign fir_clk = clk_reducer[7];
 
 
 FIR_filter_v2 #(
@@ -53,7 +59,7 @@ FIR_filter_v2 #(
   filter_inst
   (
     .sample_in(sample),
-    .clk(clk)// Input clock
+    .clk(fir_clk)// Input clock
 
   );
 

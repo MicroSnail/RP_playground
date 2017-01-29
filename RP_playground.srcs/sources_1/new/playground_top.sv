@@ -234,19 +234,28 @@ always @(posedge adc_clk) adc_rstn <=  pll_locked;
 parameter FIR_OUT_BW=48;
 wire signed [FIR_OUT_BW-1:0] fir_result;
 
+// localparam REDUCER_BW = 9;
+// reg [REDUCER_BW:0] clk_reducer = 0;
+// always @(posedge clk_125) begin
+//   clk_reducer <= clk_reducer[REDUCER_BW-1:0] + 1;
+// end
+
+wire fir_clk;
+assign fir_clk = clk_125;
+
+
 FIR_filter_v2 #(
-    .TNN(64*60),   // Total number of samples
+    .TNN(512*60),   // Total number of samples
     .ROM_DW(24),  // coefficient bitwdith
     .NMAC(60),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test
   (
-
     .sample_in(adc_dat_CH1),
     .result(fir_result),
     .output_refreshed(led_o_buf[0]),
-    .clk(clk_125)
+    .clk(fir_clk)
   );
 
 // assign led_o_buf[5:1] = 5'b0;
