@@ -234,20 +234,28 @@ always @(posedge adc_clk) adc_rstn <=  pll_locked;
 parameter FIR_OUT_BW=48;
 wire signed [FIR_OUT_BW-1:0] fir_result;
 
-// localparam REDUCER_BW = 9;
-// reg [REDUCER_BW:0] clk_reducer = 0;
-// always @(posedge clk_125) begin
-//   clk_reducer <= clk_reducer[REDUCER_BW-1:0] + 1;
-// end
+localparam REDUCER_BW = 9;
+localparam RESET_NUMBER = 250/4; // 250/4=75 * 2 = 125
+reg [REDUCER_BW : 0] clk_reducer = 0;
+reg slow_clk = 0;
+always @(posedge clk_125) begin
+  if (clk_reducer >= RESET_NUMBER) begin
+    clk_reducer <= 0;
+    slow_clk <= ~slow_clk;
+  end else begin
+    clk_reducer <= clk_reducer + 1;  
+  end
+end
 
 wire fir_clk;
+// assign fir_clk = clk_reducer[REDUCER_BW];
 assign fir_clk = clk_125;
-
+localparam NMAC = 60;
 
 FIR_filter_v2 #(
-    .TNN(512*60),   // Total number of samples
+    .TNN(512*NMAC),   // Total number of samples
     .ROM_DW(24),  // coefficient bitwdith
-    .NMAC(60),      // Number of Multiply accumulator
+    .NMAC(NMAC),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_test
@@ -273,16 +281,18 @@ reg [14-1 : 0] dac_CH2;
 reg dac_rst = 0;
 
 ///////////// [IMPORTANT:] CHANGE THIS PARAMETER ACCORDING TO THE SCALING FACTOR OF COEFFICIENTS /////////////
-localparam DAC_SHIFT_RIGHT = 15;
+localparam FIR_SHIFT_RIGHT = 15;
+wire [7:0] fir_SR;
 wire [FIR_OUT_BW-1:0] fir_result_rescaled;
-assign fir_result_rescaled = fir_result >>> DAC_SHIFT_RIGHT;
+assign fir_result_rescaled = fir_result >>> fir_SR;
 
 wire [14-1 : 0] dac_CH1_wire;
 wire [14-1 : 0] dac_CH2_wire;
 
 reg [14-1: 0] fir_result_rescaled_trunc;
 
-always @(posedge clk_125) begin // clip the fir_result_rescaled if it overflows
+// Used for diagnosing the FIR filter unit
+always @(posedge clk_125) begin // clip the fir_result_rescaled if it overflows // unsigned representation
   //positive overflow
   if({fir_result_rescaled[FIR_OUT_BW-1], |fir_result_rescaled[FIR_OUT_BW-2:13]}==2'b01) begin
     fir_result_rescaled_trunc <= 14'b11_1111_1111_1111;
@@ -294,14 +304,15 @@ always @(posedge clk_125) begin // clip the fir_result_rescaled if it overflows
   
 end
 
-assign dac_CH2_wire = fir_result_rescaled_trunc;
+// assign dac_CH2_wire = fir_result_rescaled_trunc[14-1] ? fir_result_rescaled_trunc : 14'b10_0000_0000_0000;
+// assign dac_CH2_wire = fir_result_rescaled_trunc;
 
+wire noNegOutputs;
 
-
-
+// dac_CH1, CH2 should be in unsigned representation
 always @(posedge dac_clk_1x)  // dac_clk_1x = 125MHz 
 begin
-  dac_CH1 <= dac_CH1_wire;
+  dac_CH1 <= dac_CH1_wire[14-1] ? dac_CH1_wire : 14'b10_0000_0000_0000;
   // dac_CH2 <= dac_CH1_buf;
   dac_CH2 <= dac_CH2_wire;
   // dac_CH2 <= dac_CH2_wire;
@@ -319,7 +330,7 @@ always @(posedge dac_clk_1x) dac_rst  <= ~pll_locked;
 //////////////////////////////////////////////////////////////////////////
 
 // Testing PID block 
-PID_block #(.RESCALE_FACTOR(DAC_SHIFT_RIGHT) ) 
+PID_block #(.RESCALE_FACTOR(FIR_SHIFT_RIGHT) ) 
     pid_inst 
   (
   .clk_i        ( clk_125      ),
@@ -328,9 +339,12 @@ PID_block #(.RESCALE_FACTOR(DAC_SHIFT_RIGHT) )
   // .dat_i        ( {adc_dat_CH1[13], {48-14{1'b0}}, adc_dat_CH1[12:0]}  ),
   .dat_i        ( fir_result_rescaled   ),
   .dat_o        ( dac_CH1_wire ),
-  // .errorMon_o   ( dac_CH2_wire ),
+  .errorMon_o   ( dac_CH2_wire ),
+
   .KiEnabled    (      1     ),
   .KpEnabled    (      1     ),
+  .fir_SR_set   ( fir_SR ),
+  .clamp_negative2zero(noNegOutputs),
         // System bus connection 
   .sys_addr     (    sys_addr          ),
   .sys_wdata    (    sys_wdata         ),

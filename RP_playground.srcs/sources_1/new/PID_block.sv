@@ -45,6 +45,10 @@ module PID_block #(
 
   // input                           int_rst_i,  // integrator reset
 
+  // helper parameters, need to move these somewhere else later
+  output     reg [7:0]              fir_SR_set = 15,
+  output     reg                    clamp_negative2zero = 1,
+
   // input  signed [ IBW-1: 0]       dc_offset,  //pid_sum = p + i + d + offset
   output     [ PID_OBW-1: 0]        errorMon_o,
   output     reg [ 7:0 ]                led_o,
@@ -103,7 +107,7 @@ always @(posedge clk_i) begin
 end
 
 // Error signal monitor output
-// assign errorMon_o = {~error[IBW-1], error[12:0]};
+assign errorMon_o = {~error[IBW-1], error[12:0]};
 // assign errorMon_o = {~adc_in[13], adc_in[12:0]};
 
 
@@ -157,7 +161,6 @@ end
 
 assign int_sum = ki_mult + int_reg;
 
-assign errorMon_o = {~int_reg[IBW-1], int_reg[12:0]};
 
 
 //---------------------------------------------------------------------------------
@@ -195,35 +198,39 @@ assign dat_o = pid_out;
 reg sp_manual = 0;
 
 always @(posedge clk_i) begin
-   if (rstn_i == 1'b0) begin
-      set_point_set     <=   32'd0 ;
-      kp_set            <=   32'd0 ;
-      ki_set            <=   32'd0 ;
-      kp_SR_set         <=   32'b0 ;
-      ki_SR_set         <=   32'b0 ; // intetralTerm = $signed(Integrated >>> ki_SR)
-      int_rst_i         <=    1'b1 ;
-      sp_manual         <=    1'b1 ;
-      dc_offset_set     <=   32'b0 ;
-      // adderEnabled  <=    1'b0 ;
-      // sweepGain     <=   14'b0 ;
-   end
-   else begin
-      if (sys_wen) begin
-         if (sys_addr[19:0]==16'h400)    {int_rst_i} <= sys_wdata[0] ;
+  if (rstn_i == 1'b0) begin
+    set_point_set     <=   32'd0 ;
+    kp_set            <=   32'd0 ;
+    ki_set            <=   32'd0 ;
+    kp_SR_set         <=   32'b0 ;
+    ki_SR_set         <=   32'b0 ; // intetralTerm = $signed(Integrated >>> ki_SR)
+    int_rst_i         <=    1'b1 ;
+    sp_manual         <=    1'b1 ;
+    dc_offset_set     <=   32'b0 ;
+    clamp_negative2zero <= 1'b0  ;
+    // adderEnabled  <=    1'b0 ;
+    // sweepGain     <=   14'b0 ;
+  end
+  else begin
+    if (sys_wen) begin
+      if (sys_addr[19:0]==16'h400)    {int_rst_i} <= sys_wdata[0] ;
 
-         if (sys_addr[19:0]==16'h404) set_point_set <= sys_wdata[32-1:0]  ;
-         if (sys_addr[19:0]==16'h408) kp_set        <= sys_wdata[32-1:0]  ;
-         if (sys_addr[19:0]==16'h40c) ki_set        <= sys_wdata[32-1:0]  ;
-         if (sys_addr[19:0]==16'h410) kp_SR_set     <= sys_wdata[14-1:0]  ; // kp_SR * kp
-         if (sys_addr[19:0]==16'h414) ki_SR_set     <= sys_wdata[14-1:0]  ; // Ki divider
-         if (sys_addr[19:0]==16'h418) sp_manual     <= sys_wdata[0]       ; // sp_manual = 1 to use manual set point
-         if (sys_addr[19:0]==16'h41c) dc_offset_set <= sys_wdata[32-1:0]  ; // DC offset 
-         // if (sys_addr[19:0]==16'h420) pid_out       <= sys_wdata[14-1:0]  ; // DC offset 
+      if (sys_addr[19:0]==16'h404) set_point_set <= sys_wdata[32-1:0]  ;
+      if (sys_addr[19:0]==16'h408) kp_set        <= sys_wdata[32-1:0]  ;
+      if (sys_addr[19:0]==16'h40c) ki_set        <= sys_wdata[32-1:0]  ;
+      if (sys_addr[19:0]==16'h410) kp_SR_set     <= sys_wdata[14-1:0]  ; // kp_SR * kp
+      if (sys_addr[19:0]==16'h414) ki_SR_set     <= sys_wdata[14-1:0]  ; // Ki divider
+      if (sys_addr[19:0]==16'h418) sp_manual     <= sys_wdata[0]       ; // sp_manual = 1 to use manual set point
+      if (sys_addr[19:0]==16'h41c) dc_offset_set <= sys_wdata[32-1:0]  ; // DC offset 
+      if (sys_addr[19:0]==16'h420) fir_SR_set    <= sys_wdata[32-1:0]  ; // FIR result shift right 
+      if (sys_addr[19:0]==16'h420) clamp_negative2zero    <= sys_wdata[0]  ; // 1 -> clamp negative outputs to 14'b10_0000_0000_0000
 
-         // if (sys_addr[19:0]==16'h420) adderEnabled  <= sys_wdata[0]       ; // PID_out + sweep
-         // if (sys_addr[19:0]==16'h424) sweepGain     <= sys_wdata[15-1:0]  ; //
-      end
-   end
+      // if (sys_addr[19:0]==16'h420) pid_out       <= sys_wdata[14-1:0]  ; // DC offset 
+
+      // if (sys_addr[19:0]==16'h420) adderEnabled  <= sys_wdata[0]       ; // PID_out + sweep
+      // if (sys_addr[19:0]==16'h424) sweepGain     <= sys_wdata[15-1:0]  ; //
+    end
+  end
 end
 
 wire sys_en;
@@ -231,26 +238,28 @@ assign sys_en = sys_wen | sys_ren;
 
 always @(posedge clk_i)
 if (rstn_i == 1'b0) begin
-   sys_err <= 1'b0 ;
-   sys_ack <= 1'b0 ;
+  sys_err <= 1'b0 ;
+  sys_ack <= 1'b0 ;
 end else begin
-   sys_err <= 1'b0 ;
+  sys_err <= 1'b0 ;
 
-   casez (sys_addr[19:0])
-      20'h400 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, int_rst_i} ; end 
-      20'h404 : begin sys_ack <= sys_en; sys_rdata <= set_point_set ; end 
-      20'h408 : begin sys_ack <= sys_en; sys_rdata <= kp_set        ; end 
-      20'h40c : begin sys_ack <= sys_en; sys_rdata <= ki_set        ; end 
-      20'h410 : begin sys_ack <= sys_en; sys_rdata <= kp_SR_set     ; end 
-      20'h414 : begin sys_ack <= sys_en; sys_rdata <= ki_SR_set     ; end
-      20'h418 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, sp_manual    } ; end 
-      20'h41c : begin sys_ack <= sys_en; sys_rdata <= dc_offset     ; end 
-      // 20'h420 : begin sys_ack <= sys_en; sys_rdata <= {{14-1{1'b0}}, pid_out}     ; end 
-      // 20'h420 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, adderEnabled } ; end 
-      // 20'h424 : begin sys_ack <= sys_en; sys_rdata <= {{32- 15{1'b0}}, sweepGain    } ; end        
-      // 20'h428 : begin sys_ack <= sys_en; sys_rdata <= {}; end        
-     default : begin sys_ack <= sys_en; sys_rdata <=  32'h0                     ; end
-   endcase
+  casez (sys_addr[19:0])
+    20'h400 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, int_rst_i} ; end 
+    20'h404 : begin sys_ack <= sys_en; sys_rdata <= set_point_set ; end 
+    20'h408 : begin sys_ack <= sys_en; sys_rdata <= kp_set        ; end 
+    20'h40c : begin sys_ack <= sys_en; sys_rdata <= ki_set        ; end 
+    20'h410 : begin sys_ack <= sys_en; sys_rdata <= kp_SR_set     ; end 
+    20'h414 : begin sys_ack <= sys_en; sys_rdata <= ki_SR_set     ; end
+    20'h418 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, sp_manual    } ; end 
+    20'h41c : begin sys_ack <= sys_en; sys_rdata <= dc_offset     ; end 
+    20'h420 : begin sys_ack <= sys_en; sys_rdata <= fir_SR_set     ; end 
+    20'h420 : begin sys_ack <= sys_en; sys_rdata <= clamp_negative2zero     ; end         
+    // 20'h420 : begin sys_ack <= sys_en; sys_rdata <= {{14-1{1'b0}}, pid_out}     ; end 
+    // 20'h420 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, adderEnabled } ; end 
+    // 20'h424 : begin sys_ack <= sys_en; sys_rdata <= {{32- 15{1'b0}}, sweepGain    } ; end        
+    // 20'h428 : begin sys_ack <= sys_en; sys_rdata <= {}; end        
+    default : begin sys_ack <= sys_en; sys_rdata <=  32'h0                     ; end
+  endcase
 end
 
 endmodule

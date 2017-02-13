@@ -26,7 +26,7 @@ module FIR_filter_v2_TB(
 
 reg clk = 0;
 always 
-#5 clk <= ~clk;
+#8 clk <= ~clk;
 
 reg signed [13:0] sample = -500;
 
@@ -41,19 +41,26 @@ always @(posedge clk) begin
 end
 
 
-reg [7:0] clk_reducer = 0;
+localparam REDUCER_BW = 9;
+localparam RESET_NUMBER = 250/4; // 250/4=75
+reg [REDUCER_BW : 0] clk_reducer = 0;
+reg slow_clk = 0;
 always @(posedge clk) begin
-  clk_reducer <= clk_reducer[6:0] + 1;
+  if (clk_reducer >= RESET_NUMBER) begin
+    clk_reducer <= 0;
+    slow_clk <= ~slow_clk;
+  end else begin
+    clk_reducer <= clk_reducer + 1;  
+  end
 end
 
 wire fir_clk;
-assign fir_clk = clk_reducer[7];
-
-
+// assign fir_clk = clk_reducer[REDUCER_BW];
+assign fir_clk = slow_clk;
 FIR_filter_v2 #(
-    .TNN(40),   // Total number of samples
-    .ROM_DW(18),
-    .NMAC(5),      // Number of Multiply accumulator
+    .TNN(512*4),   // Total number of samples
+    .ROM_DW(24),
+    .NMAC(4),      // Number of Multiply accumulator
     .ADC_DW(14) // ADC bitwidth (14-bit for the board we are using)
   )
   filter_inst
