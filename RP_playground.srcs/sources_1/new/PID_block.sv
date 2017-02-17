@@ -34,8 +34,10 @@ module PID_block #(
   input                           rstn_i,     // reset - active low
   input  signed [ IBW-1: 0]       dat_i,      // input data   (signed!)
   input  signed [ 14-1 : 0]       adc_in,
-  output        [ PID_OBW-1: 0]   dat_o,      // output data  (unsigned!)
+  input         [ 14-1 : 0]       sweep_in,   //
 
+  output        [ PID_OBW-1: 0]   dat_o,      // output data  (unsigned!)
+  
   // settings
   // input  signed [ IBW-1: 0]       set_point,  // set point
   // input  signed [ IBW-1: 0]       kp,         // Kp
@@ -48,6 +50,9 @@ module PID_block #(
   // helper parameters, need to move these somewhere else later
   output     reg [7:0]              fir_SR_set = 15,
   output     reg                    clamp_negative2zero = 1,
+  output                            adderEnabledOut,
+  output     reg [13:0]             dac_debug_value = 0,
+  output     reg                    seeFIRoutput = 0, // Instead of error monitor output
 
   // input  signed [ IBW-1: 0]       dc_offset,  //pid_sum = p + i + d + offset
   output     [ PID_OBW-1: 0]        errorMon_o,
@@ -92,17 +97,22 @@ assign ki_SR      = ki_SR_set;
 //---------------------------------------------------------------------------------
 //  Set point error calculation
 
+reg bypass_fir = 0;
 reg  signed [IBW-1: 0] error;
 wire signed [IBW-1: 0] alt_dat_in;
 assign alt_dat_in = {{IBW-14+1{adc_in[13]}}, adc_in[12:0]};
+
 
 
 always @(posedge clk_i) begin
   if (rstn_i == 1'b0) begin
     error <= {IBW{1'b0}};
   end else begin
-    // error <= alt_dat_in - set_point; // Filename has _neg.bit
-    error <= dat_i - set_point;  // Filename has _pos.bit
+    if(bypass_fir) begin
+      error <= alt_dat_in - set_point;       
+    end else begin 
+      error <= dat_i - set_point;
+    end
   end
 end
 
@@ -172,6 +182,12 @@ assign dc_offset = {{(IBW-32+1){dc_offset_set[31]}}, dc_offset_set[30:0]};
 
 wire signed [IBW: 0]      pid_sum; // biggest posible bit-width
 reg         [PID_OBW-1: 0]  pid_out; 
+reg         [PID_OBW-1: 0]  pid_out_buf; 
+
+reg signed [32-1:0] sweepGain = 1;
+reg adderEnabled = 0;
+
+assign adderEnabledOut = adderEnabled;
 
 always @(posedge clk_i) begin
   if (rstn_i == 1'b0) begin
@@ -180,21 +196,31 @@ always @(posedge clk_i) begin
   else begin
     //These are going to assume that pid_out is the direct output (unsigned through DAC)
     if ({pid_sum[IBW], |pid_sum[IBW-1:PID_OBW-1]} == 2'b01) //positive overflow
+      // pid_out <= 14'b00_0000_0000_0000;  // I am not sure how this got switched
       pid_out <= 14'b11_1111_1111_1111; // unsigned representation
     else if ({pid_sum[IBW], &pid_sum[IBW-1:PID_OBW-1]} == 2'b10) // negative output
+      // pid_out <= 14'b11_1111_1111_1111; // unsigned representation
       pid_out <= 14'b00_0000_0000_0000;  
 //    else if ({pid_sum[33-1],&pid_sum[33-2:13]} == 2'b10) //negative overflow
 //       pid_out <= 14'h2000 ;
     else
-      // pid_out <= {~pid_sum[IBW], pid_sum[12:0]}; // back to unsigned
-      pid_out <= {~pid_sum[IBW], pid_sum[12:0]};
+      pid_out <= {~pid_sum[IBW], pid_sum[12:0]}; // back to unsigned
   end
 end
 
-// tested kp_reg alone. problem probably comes from addition and assigning?
-assign pid_sum = kp_reg + (int_reg>>> ki_SR) + dc_offset;
-assign dat_o = pid_out;
+// always @(posedge clk_i) begin 
+//   if (adderEnabled) begin 
+//     pid_out_buf <= pid_out + sweep_in;
+//   end else begin 
+//     pid_out_buf <= pid_out;
+//   end
+// end
 
+// tested kp_reg alone. problem probably comes from addition and assigning?
+assign pid_sum = kp_reg + (int_reg >>> ki_SR) + dc_offset + (adderEnabled ? $signed(sweep_in) : 0);
+assign dat_o = pid_out ;
+// assign dat_o = pid_out_buf[13] ? pid_out_buf : 14'b10_0000_0000_0000;
+// assign dat_o = pid_out_buf;
 reg sp_manual = 0;
 
 always @(posedge clk_i) begin
@@ -209,7 +235,7 @@ always @(posedge clk_i) begin
     dc_offset_set     <=   32'b0 ;
     clamp_negative2zero <= 1'b0  ;
     // adderEnabled  <=    1'b0 ;
-    // sweepGain     <=   14'b0 ;
+    sweepGain     <=   14'b0 ;
   end
   else begin
     if (sys_wen) begin
@@ -223,12 +249,17 @@ always @(posedge clk_i) begin
       if (sys_addr[19:0]==16'h418) sp_manual     <= sys_wdata[0]       ; // sp_manual = 1 to use manual set point
       if (sys_addr[19:0]==16'h41c) dc_offset_set <= sys_wdata[32-1:0]  ; // DC offset 
       if (sys_addr[19:0]==16'h420) fir_SR_set    <= sys_wdata[32-1:0]  ; // FIR result shift right 
-      if (sys_addr[19:0]==16'h420) clamp_negative2zero    <= sys_wdata[0]  ; // 1 -> clamp negative outputs to 14'b10_0000_0000_0000
+      if (sys_addr[19:0]==16'h424) clamp_negative2zero    <= sys_wdata[0]  ; // 1 -> clamp negative outputs to 14'b10_0000_0000_0000
 
       // if (sys_addr[19:0]==16'h420) pid_out       <= sys_wdata[14-1:0]  ; // DC offset 
 
-      // if (sys_addr[19:0]==16'h420) adderEnabled  <= sys_wdata[0]       ; // PID_out + sweep
-      // if (sys_addr[19:0]==16'h424) sweepGain     <= sys_wdata[15-1:0]  ; //
+      if (sys_addr[19:0]==16'h428) adderEnabled        <= sys_wdata[0]       ; // PID_out + sweep
+      if (sys_addr[19:0]==16'h42c) sweepGain           <= sys_wdata[32-1:0]  ; //
+      if (sys_addr[19:0]==16'h430) dac_debug_value     <= sys_wdata[14-1:0]  ; //
+      if (sys_addr[19:0]==16'h434) bypass_fir          <= sys_wdata[0]  ; //
+      if (sys_addr[19:0]==16'h438) seeFIRoutput        <= sys_wdata[0]  ; //
+
+        
     end
   end
 end
@@ -253,11 +284,12 @@ end else begin
     20'h418 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, sp_manual    } ; end 
     20'h41c : begin sys_ack <= sys_en; sys_rdata <= dc_offset     ; end 
     20'h420 : begin sys_ack <= sys_en; sys_rdata <= fir_SR_set     ; end 
-    20'h420 : begin sys_ack <= sys_en; sys_rdata <= clamp_negative2zero     ; end         
-    // 20'h420 : begin sys_ack <= sys_en; sys_rdata <= {{14-1{1'b0}}, pid_out}     ; end 
-    // 20'h420 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, adderEnabled } ; end 
-    // 20'h424 : begin sys_ack <= sys_en; sys_rdata <= {{32- 15{1'b0}}, sweepGain    } ; end        
-    // 20'h428 : begin sys_ack <= sys_en; sys_rdata <= {}; end        
+    20'h424 : begin sys_ack <= sys_en; sys_rdata <= clamp_negative2zero     ; end         
+    20'h428 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, adderEnabled } ; end 
+    20'h42c : begin sys_ack <= sys_en; sys_rdata <= sweepGain; end        
+    20'h430 : begin sys_ack <= sys_en; sys_rdata <= {{32- 14{1'b0}}, dac_debug_value} ; end        
+    20'h434 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, bypass_fir} ; end        
+    20'h438 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, seeFIRoutput} ; end        
     default : begin sys_ack <= sys_en; sys_rdata <=  32'h0                     ; end
   endcase
 end

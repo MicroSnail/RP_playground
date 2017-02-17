@@ -29,11 +29,12 @@ module FIR_filter_v2
     parameter ADC_DW = 14     // ADC bitwidth (14-bit for the board we are using)
   )
   (
-    input [ADC_DW - 1: 0]             sample_in,
+    input [ADC_DW - 1: 0]             sample_in, // CAUTION: this might need to be signed?
     input                             clk,  
     input                             clk_45deg,  // 45 degree out of phase w.r.t. clk
     output signed [DSP_OUT_DW -1 : 0] result,
-    output reg                        output_refreshed,  
+    output reg                        output_refreshed,
+    
 
     // system bus (for debugging?)
     input      [ 32-1: 0] sys_addr        ,  // bus address

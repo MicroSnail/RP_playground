@@ -223,16 +223,21 @@ begin
 
   // signed ADC inputs: 0-->16383 maps to -8192-->8191
   adc_dat_CH1 <= {~adc_dat_i[0][16-1], adc_dat_i[0][16-2:2]};
+  // adc_dat_CH2 <= {~adc_dat_CH2_buf[13], adc_dat_CH2_buf[12:0]};
   adc_dat_CH2 <= {~adc_dat_i[1][16-1], adc_dat_i[1][16-2:2]};
 end
+// wire [14-1:0] adc_dat_CH2_buf;
+// IBUF adc_dat_in_inst [14-1:0] (.I(adc_dat_i[1][16-1:2]), .O(adc_dat_CH2_buf));
+
 
 // ADC reset (active low)
 always @(posedge adc_clk) adc_rstn <=  pll_locked;
 //////////////////////////////////////////////////////////////////////////
 
-//-------------------------FIR FILTER TEST------------------------------//
+//-------------------------FIR FILTER-----------------------------------//
 parameter FIR_OUT_BW=48;
 wire signed [FIR_OUT_BW-1:0] fir_result;
+wire bypass_fir;
 
 localparam REDUCER_BW = 9;
 localparam RESET_NUMBER = 250/4; // 250/4=75 * 2 = 125
@@ -289,6 +294,11 @@ assign fir_result_rescaled = fir_result >>> fir_SR;
 wire [14-1 : 0] dac_CH1_wire;
 wire [14-1 : 0] dac_CH2_wire;
 
+wire noNegOutputs;
+wire useSweepSignal;
+wire seeFIRoutput;
+wire [14-1 : 0] errorMonitor;
+
 reg [14-1: 0] fir_result_rescaled_trunc;
 
 // Used for diagnosing the FIR filter unit
@@ -305,17 +315,17 @@ always @(posedge clk_125) begin // clip the fir_result_rescaled if it overflows 
 end
 
 // assign dac_CH2_wire = fir_result_rescaled_trunc[14-1] ? fir_result_rescaled_trunc : 14'b10_0000_0000_0000;
-// assign dac_CH2_wire = fir_result_rescaled_trunc;
+assign dac_CH2_wire = seeFIRoutput? fir_result_rescaled_trunc : errorMonitor;
 
-wire noNegOutputs;
+
+wire [13:0] dac_debug_value;
+
 
 // dac_CH1, CH2 should be in unsigned representation
 always @(posedge dac_clk_1x)  // dac_clk_1x = 125MHz 
 begin
-  dac_CH1 <= dac_CH1_wire[14-1] ? dac_CH1_wire : 14'b10_0000_0000_0000;
-  // dac_CH2 <= dac_CH1_buf;
+  dac_CH1 <= noNegOutputs ? (dac_CH1_wire[14-1] ? 14'b10_0000_0000_0000 : dac_CH1_wire) : dac_CH1_wire;
   dac_CH2 <= dac_CH2_wire;
-  // dac_CH2 <= dac_CH2_wire;
 end
 
 // DDR outputs
@@ -329,22 +339,31 @@ ODDR ODDR_clk(.Q(dac_clk_o), .D1(1'b0), .D2(1'b1), .C(dac_clk_2x_n90deg), .CE(1'
 always @(posedge dac_clk_1x) dac_rst  <= ~pll_locked;
 //////////////////////////////////////////////////////////////////////////
 
+
+
 // Testing PID block 
 PID_block #(.RESCALE_FACTOR(FIR_SHIFT_RIGHT) ) 
     pid_inst 
   (
   .clk_i        ( clk_125      ),
   .rstn_i       ( 1'b1     ),
-  // .adc_in       ( adc_dat_CH1),
+  .sweep_in     ( adc_dat_CH2 ),
+  .adc_in       ( adc_dat_CH1 ),
   // .dat_i        ( {adc_dat_CH1[13], {48-14{1'b0}}, adc_dat_CH1[12:0]}  ),
   .dat_i        ( fir_result_rescaled   ),
   .dat_o        ( dac_CH1_wire ),
-  .errorMon_o   ( dac_CH2_wire ),
+  .errorMon_o   ( errorMonitor ),
 
   .KiEnabled    (      1     ),
   .KpEnabled    (      1     ),
-  .fir_SR_set   ( fir_SR ),
-  .clamp_negative2zero(noNegOutputs),
+
+  .fir_SR_set           ( fir_SR          ),
+  .clamp_negative2zero  ( noNegOutputs    ),
+  .adderEnabledOut      ( useSweepSignal  ),
+  .dac_debug_value      ( dac_debug_value ),
+  .seeFIRoutput         ( seeFIRoutput    ), // 1 -- see FIR output; 0 -- see error monitor
+  // .bypass_fir           ( bypass_fir      ),
+
         // System bus connection 
   .sys_addr     (    sys_addr          ),
   .sys_wdata    (    sys_wdata         ),
