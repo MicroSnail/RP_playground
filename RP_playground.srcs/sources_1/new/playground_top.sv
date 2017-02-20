@@ -288,7 +288,7 @@ reg dac_rst = 0;
 ///////////// [IMPORTANT:] CHANGE THIS PARAMETER ACCORDING TO THE SCALING FACTOR OF COEFFICIENTS /////////////
 localparam FIR_SHIFT_RIGHT = 15;
 wire [7:0] fir_SR;
-wire [FIR_OUT_BW-1:0] fir_result_rescaled;
+wire signed [FIR_OUT_BW-1:0] fir_result_rescaled;
 assign fir_result_rescaled = fir_result >>> fir_SR;
 
 wire [14-1 : 0] dac_CH1_wire;

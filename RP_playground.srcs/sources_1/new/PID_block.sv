@@ -99,6 +99,11 @@ assign ki_SR      = ki_SR_set;
 
 reg bypass_fir = 0;
 reg  signed [IBW-1: 0] error;
+wire signed [IBW-1: 0] errorRescaled;
+reg [8-1:0] errorSR = 0;
+
+assign errorRescaled = error >>> errorSR;
+
 wire signed [IBW-1: 0] alt_dat_in;
 assign alt_dat_in = {{IBW-14+1{adc_in[13]}}, adc_in[12:0]};
 
@@ -116,8 +121,10 @@ always @(posedge clk_i) begin
   end
 end
 
+
+
 // Error signal monitor output
-assign errorMon_o = {~error[IBW-1], error[12:0]};
+assign errorMon_o = {~errorRescaled[IBW-1], errorRescaled[12:0]};
 // assign errorMon_o = {~adc_in[13], adc_in[12:0]};
 
 
@@ -257,7 +264,12 @@ always @(posedge clk_i) begin
       if (sys_addr[19:0]==16'h42c) sweepGain           <= sys_wdata[32-1:0]  ; //
       if (sys_addr[19:0]==16'h430) dac_debug_value     <= sys_wdata[14-1:0]  ; //
       if (sys_addr[19:0]==16'h434) bypass_fir          <= sys_wdata[0]  ; //
-      if (sys_addr[19:0]==16'h438) seeFIRoutput        <= sys_wdata[0]  ; //
+      if (sys_addr[19:0]==16'h438) seeFIRoutput        <= sys_wdata[0]  ; 
+      // seeFIRoutput
+      // 1 --> error monitor output now outputs FIR rescaled (not from this module); 
+      // 0 --> the error from this PID controller
+
+      if (sys_addr[19:0]==16'h43c) errorSR             <= sys_wdata[8-1:0]  ; // errorMonitor = error >>> errorSR
 
         
     end
@@ -290,6 +302,7 @@ end else begin
     20'h430 : begin sys_ack <= sys_en; sys_rdata <= {{32- 14{1'b0}}, dac_debug_value} ; end        
     20'h434 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, bypass_fir} ; end        
     20'h438 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, seeFIRoutput} ; end        
+    20'h43c : begin sys_ack <= sys_en; sys_rdata <= {{32- 8{1'b0}}, errorSR} ; end        
     default : begin sys_ack <= sys_en; sys_rdata <=  32'h0                     ; end
   endcase
 end
