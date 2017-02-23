@@ -38,16 +38,20 @@ module fir_unit #(
   input                           clk,
   input                           smpl_buf_wen,
 
-  input [ROM_AW - 1 : 0]          rom_addr,
-  input [BUF_RAM_AW - 1 : 0]      smpl_buf_addr,
-  input signed [ADC_DW - 1 : 0]   smpl_buf_din,
+  input         [ROM_AW - 1 : 0]  rom_addr,
+  input     [BUF_RAM_AW - 1 : 0]  smpl_buf_addr,
+  input  signed [ADC_DW - 1 : 0]  smpl_buf_din,
   output signed [ADC_DW - 1 : 0]  smpl_buf_dout, 
-  output signed [48-1 : 0]              mac_out,
+  output signed       [48-1 : 0]  mac_out,
   input                           mac_ce,
   input                           mac_clear,
   output signed [ADC_DW - 1 : 0]  earliest_sample_out,
-  input                           update_earliest_buffer
+  input                           update_earliest_buffer,
 
+  input                           coe_wen,
+  input         [ROM_AW - 1 : 0]  coe_waddr,
+  input         [ROM_DW - 1 : 0]  coe_wdata,
+  input         [ROM_DW - 1 : 0]  coe_rdata
     );
 
 
@@ -129,12 +133,52 @@ xpm_memory_spram # (
 // End of xpm_memory_spram instance declaration
 
 
-localparam mem_init = {"FIR_COEFF_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"};
 // ROM to store coefficients
 // xpm_memory_sprom: Single Port ROM
 // Xilinx Parameterized Macro, Version 2016.4
-xpm_memory_sprom # (
+// xpm_memory_sprom # (
 
+//   // Common module parameters
+//   .MEMORY_SIZE        (ROM_SIZE),           //positive integer
+//   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", or "block";
+//   .MEMORY_INIT_FILE   (mem_init),         //string; "none" or "<filename>.mem" 
+//   .MEMORY_INIT_PARAM  (""    ),         //string;
+//   .USE_MEM_INIT       (1),              //integer; 0,1
+//   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
+//   .MESSAGE_CONTROL    (0),              //integer; 0,1
+//   .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
+//   .AUTO_SLEEP_TIME    (0),              //Do not Change
+
+//   // Port A module parameters
+//   .READ_DATA_WIDTH_A  (ROM_DW),             //positive integer
+//   .ADDR_WIDTH_A       (ROM_AW),              //positive integer
+//   .READ_RESET_VALUE_A ("0"),            //string
+//   .READ_LATENCY_A     (ROM_LATENCY)               //non-negative integer
+
+// ) ROM_00 (
+
+//   // Common module ports
+//   .sleep          (1'b0),
+
+//   // Port A module ports
+//   .clka           (clk),
+//   .rsta           (1'b0),
+//   .ena            (1'b1),
+//   .regcea         (1'b1),
+//   .addra          (rom_addr),
+//   .injectsbiterra (1'b0),  //do not change
+//   .injectdbiterra (1'b0),  //do not change
+//   .douta          (coe_out),
+//   .sbiterra       (),      //do not change
+//   .dbiterra       ()       //do not change
+// );
+
+// End of xpm_memory_sprom instance declaration
+
+localparam mem_init = {"FIR_COEFF_", MEM_ID_1[7:0], MEM_ID_0[7:0], ".MEM"}; 
+// xpm_memory_spram: Single Port RAM
+// Xilinx Parameterized Macro, Version 2016.4
+xpm_memory_spram # (
   // Common module parameters
   .MEMORY_SIZE        (ROM_SIZE),           //positive integer
   .MEMORY_PRIMITIVE   ("block"),         //string; "auto", "distributed", or "block";
@@ -143,16 +187,19 @@ xpm_memory_sprom # (
   .USE_MEM_INIT       (1),              //integer; 0,1
   .WAKEUP_TIME        ("disable_sleep"),//string; "disable_sleep" or "use_sleep_pin" 
   .MESSAGE_CONTROL    (0),              //integer; 0,1
-  .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
-  .AUTO_SLEEP_TIME    (0),              //Do not Change
 
   // Port A module parameters
+  .WRITE_DATA_WIDTH_A (ROM_DW),             //positive integer
   .READ_DATA_WIDTH_A  (ROM_DW),             //positive integer
+  .BYTE_WRITE_WIDTH_A (ROM_DW),             //integer; 8, 9, or WRITE_DATA_WIDTH_A value
   .ADDR_WIDTH_A       (ROM_AW),              //positive integer
   .READ_RESET_VALUE_A ("0"),            //string
-  .READ_LATENCY_A     (ROM_LATENCY)               //non-negative integer
+  .ECC_MODE           ("no_ecc"),       //string; "no_ecc", "encode_only", "decode_only" or "both_encode_and_decode" 
+  .AUTO_SLEEP_TIME    (0),              //Do not Change
+  .READ_LATENCY_A     (2),              //non-negative integer
+  .WRITE_MODE_A       ("write_first")    //string; "write_first", "read_first", "no_change" 
 
-) ROM_00 (
+) xpm_memory_spram_inst (
 
   // Common module ports
   .sleep          (1'b0),
@@ -162,15 +209,17 @@ xpm_memory_sprom # (
   .rsta           (1'b0),
   .ena            (1'b1),
   .regcea         (1'b1),
-  .addra          (rom_addr),
-  .injectsbiterra (1'b0),  //do not change
-  .injectdbiterra (1'b0),  //do not change
+  .wea            (coe_wen),
+  .addra          (coe_wen ? coe_waddr : rom_addr),
+  .dina           (coe_wdata),
+  .injectsbiterra (1'b0),
+  .injectdbiterra (1'b0),
   .douta          (coe_out),
-  .sbiterra       (),      //do not change
-  .dbiterra       ()       //do not change
+  .sbiterra       (),
+  .dbiterra       ()
+
 );
 
-// End of xpm_memory_sprom instance declaration
 
 
 // Multiply accumulator

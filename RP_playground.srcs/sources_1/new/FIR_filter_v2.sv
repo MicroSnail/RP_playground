@@ -304,8 +304,9 @@ always @(posedge clk) begin
   end
 end 
 
-
-
+reg coe_wens [0 : NMAC - 1]  = '{default: {1'b0}};
+reg [ROM_DW - 1 : 0] coe_wdatas [0 : NMAC - 1] = '{default: {ROM_DW{1'b0}}};
+reg [ROM_AW - 1 : 0] coe_waddrs [0 : NMAC - 1] = '{default: {ROM_AW{1'b0}}};
 
 // Instantiate partial FIR modules, each responsible for integrating a chunk of the kernel
 generate
@@ -322,6 +323,8 @@ generate
       .ROM_LATENCY      ( ROM_LATENCY         ),  
       .MAC_LATENCY      ( MAC_LATENCY         )
         ) fir_sub_module  (
+      .earliest_sample_out    ( earliest_sample_out[i]  ),
+      .update_earliest_buffer ( is_earliest_addr        ),
       .clk            ( clk                   ),
       .smpl_buf_wen   ( smpl_buf_wen          ),
       .rom_addr       ( rom_addr              ),
@@ -330,12 +333,28 @@ generate
       .mac_out        ( mac_out[i]            ),
       .mac_ce         ( mac_ce                ),
       .mac_clear      ( mac_clear             ),
-      .earliest_sample_out    ( earliest_sample_out[i]  ),
-      .update_earliest_buffer ( is_earliest_addr        )
+      .coe_wen        ( coe_wens[i]           ),
+      .coe_waddr      ( coe_waddrs[i]         ),
+      .coe_wdata      ( coe_wdatas[i]         )
     );
   end
 endgenerate
 
+
+always @(posedge clk) begin
+begin
+  if (sys_wen) begin
+    for(int i=0; i < NMAC; i++) begin: coe_writing
+      if (sys_addr[19:0] == 4 * (0 + 3 * i) + 500) coe_wens[i]   <= sys_wdata[0];
+      if (sys_addr[19:0] == 4 * (1 + 3 * i) + 500) coe_waddrs[i] <= sys_wdata[ROM_AW-1:0];
+      if (sys_addr[19:0] == 4 * (2 + 3 * i) + 500) coe_wdatas[i] <= sys_wdata[ROM_DW-1:0];
+    end
+  end
+end
+end
+
+wire sys_en;
+assign sys_en = sys_wen | sys_ren;
 
 
 endmodule

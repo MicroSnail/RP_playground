@@ -268,7 +268,17 @@ FIR_filter_v2 #(
     .sample_in(adc_dat_CH1),
     .result(fir_result),
     .output_refreshed(led_o_buf[0]),
-    .clk(fir_clk)
+    .clk(fir_clk),
+
+    // System bus connection 
+    .sys_addr     (    sys_addr          ),
+    .sys_wdata    (    sys_wdata         ),
+    .sys_sel      (    sys_sel           ),
+    .sys_wen      (    sys_wen[0]        ),
+    .sys_ren      (    sys_ren[0]        ),
+    .sys_rdata    (    sys_rdata[31 : 0] ),
+    .sys_err      (    sys_err[0]        ),
+    .sys_ack      (    sys_ack[0]        )
   );
 
 // assign led_o_buf[5:1] = 5'b0;

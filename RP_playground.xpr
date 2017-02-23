@@ -60,14 +60,14 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.hwdef"/>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hw_handoff/zynq_block_bd.tcl"/>
         <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hw_handoff/zynq_block.hwh"/>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="zynq_block_ooc.xdc"/>
         <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.v"/>
         <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="ip/zynq_block_processing_system7_0_0/zynq_block_processing_system7_0_0.xci">
           <Proxy FileSetName="zynq_block_processing_system7_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hw_handoff/zynq_block_bd.tcl"/>
-        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="zynq_block_ooc.xdc"/>
+        <CompFileExtendedInfo CompFileName="zynq_block.bd" FileRelPathName="hdl/zynq_block.hwdef"/>
       </File>
       <File Path="$PSRCDIR/sources_1/imports/fpga/rtl/interface/sys_bus_if.sv">
         <FileInfo>
@@ -87,14 +87,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/bd/zynq_block/hdl/zynq_block_wrapper.v">
+      <File Path="$PSRCDIR/sources_1/new/fir_unit.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/fir_unit.sv">
+      <File Path="$PSRCDIR/sources_1/bd/zynq_block/hdl/zynq_block_wrapper.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
