@@ -3,8 +3,8 @@
 -- Tool Version: Vivado v.2016.4 (win64) Build 1733598 Wed Dec 14 22:35:39 MST 2016
 -- Date        : Mon Jan 16 11:07:38 2017
 -- Host        : EpsilonIJK running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub
---               D:/Users/MicroSnail/Documents/Cornell/Vengalattore/FPGA_PID/RP_playground/RP_playground.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top clk_wiz_0 -prefix
+--               clk_wiz_0_ clk_wiz_0_stub.vhdl
 -- Design      : clk_wiz_0
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7z010clg400-1

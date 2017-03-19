@@ -299,7 +299,11 @@ reg dac_rst = 0;
 localparam FIR_SHIFT_RIGHT = 15;
 wire [7:0] fir_SR;
 wire signed [FIR_OUT_BW-1:0] fir_result_rescaled;
-assign fir_result_rescaled = fir_result >>> fir_SR;
+wire [32-1 : 0] fir_result_offset; 
+
+// assign fir_result_rescaled = (fir_result >>> fir_SR) - fir_result_offset;
+assign fir_result_rescaled = (fir_result >>> fir_SR);
+
 
 wire [14-1 : 0] dac_CH1_wire;
 wire [14-1 : 0] dac_CH2_wire;
@@ -372,6 +376,7 @@ PID_block #(.RESCALE_FACTOR(FIR_SHIFT_RIGHT) )
   .adderEnabledOut      ( useSweepSignal  ),
   .dac_debug_value      ( dac_debug_value ),
   .seeFIRoutput         ( seeFIRoutput    ), // 1 -- see FIR output; 0 -- see error monitor
+  // .fir_result_offset    (fir_result_offset),
   // .bypass_fir           ( bypass_fir      ),
 
         // System bus connection 

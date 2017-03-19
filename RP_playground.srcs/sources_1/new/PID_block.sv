@@ -53,6 +53,7 @@ module PID_block #(
   output                            adderEnabledOut,
   output     reg [13:0]             dac_debug_value = 0,
   output     reg                    seeFIRoutput = 0, // Instead of error monitor output
+  // output     reg [32-1 : 0]         fir_result_offset = 0,
 
   // input  signed [ IBW-1: 0]       dc_offset,  //pid_sum = p + i + d + offset
   output     [ PID_OBW-1: 0]        errorMon_o,
@@ -79,14 +80,14 @@ wire signed [ IBW-1: 0] ki;         // Ki
 wire [ 14-1: 0]  kp_SR;      // Kp_result >>> kp_SR (shift right)
 wire [ 14-1: 0]  ki_SR;      // int_result >>> ki_SR (shift right)
 
-reg int_rst_i = 0;  // integrator reset
+reg int_rst_i = 1;  // integrator reset
 
 
 reg signed [ 32-1: 0] set_point_set = 0;  // set point
-reg signed [ 32-1: 0] kp_set = 1;         // Kp
+reg signed [ 32-1: 0] kp_set = 0;         // Kp
 reg signed [ 32-1: 0] ki_set = 0;         // Ki
-reg [ 14-1: 0] kp_SR_set = 0;      // Kp_result >>> kp_SR (shift right)
-reg [ 14-1: 0] ki_SR_set = 0;      // int_result >>> ki_SR (shift right)
+reg [ 14-1: 0] kp_SR_set = 10;      // Kp_result >>> kp_SR (shift right)
+reg [ 14-1: 0] ki_SR_set = 25;      // int_result >>> ki_SR (shift right)
 
 assign set_point  = {{(IBW-32+1){set_point_set[31]}}, set_point_set[30:0]};
 assign kp         = {{(IBW-32+1){kp_set[31]}}, kp_set[30:0]};
@@ -270,6 +271,7 @@ always @(posedge clk_i) begin
       // 0 --> the error from this PID controller
 
       if (sys_addr[19:0]==16'h43c) errorSR             <= sys_wdata[8-1:0]  ; // errorMonitor = error >>> errorSR
+      // if (sys_addr[19:0]==16'h440) fir_result_offset   <= sys_wdata[32-1:0]  ; 
 
         
     end
@@ -303,6 +305,7 @@ end else begin
     20'h434 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, bypass_fir} ; end        
     20'h438 : begin sys_ack <= sys_en; sys_rdata <= {{32- 1{1'b0}}, seeFIRoutput} ; end        
     20'h43c : begin sys_ack <= sys_en; sys_rdata <= {{32- 8{1'b0}}, errorSR} ; end        
+    // 20'h440 : begin sys_ack <= sys_en; sys_rdata <= fir_result_offset ; end        
     default : begin sys_ack <= sys_en; sys_rdata <=  32'h0                     ; end
   endcase
 end
